@@ -1,0 +1,46 @@
+export const categoryTypeValues = ["income", "expense", "transfer"] as const;
+
+export type CategoryType = (typeof categoryTypeValues)[number];
+export type CategoryFieldName = "name" | "type" | "isActive" | "color" | "icon";
+
+export type Category = {
+  id: string;
+  name: string;
+  type: CategoryType;
+  isActive: boolean;
+  color?: string;
+  icon?: string;
+};
+
+export type CreateCategoryInput = {
+  name: string;
+  type: CategoryType;
+  isActive: boolean;
+  color?: string;
+  icon?: string;
+};
+
+export type UpdateCategoryInput = CreateCategoryInput & {
+  id: string;
+};
+
+export type CategoryFilters = {
+  type?: CategoryType;
+  isActive?: boolean;
+};
+
+export type ToggleCategoryStatusInput = {
+  categoryId: string;
+  isActive: boolean;
+};
+
+export type CategoryActionResult =
+  | {
+      status: "success";
+      message: string;
+    }
+  | {
+      status: "error";
+      message: string;
+      fieldErrors?: Partial<Record<CategoryFieldName, string[]>>;
+    };
