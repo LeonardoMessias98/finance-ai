@@ -7,8 +7,8 @@ describe("AppHeader", () => {
   it("renders the project branding and main navigation", () => {
     render(<AppHeader />);
 
-    expect(screen.getByText("finance-ai")).toBeInTheDocument();
-    expect(screen.getByText("controle pessoal")).toBeInTheDocument();
+    expect(screen.getByLabelText("Início")).toBeInTheDocument();
+    expect(screen.getByText("Início")).toBeInTheDocument();
     expect(screen.getByText("Histórico")).toBeInTheDocument();
     expect(screen.getByText("Nova transação")).toBeInTheDocument();
   });

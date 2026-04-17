@@ -8,7 +8,7 @@ import { LoaderCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createGoalAction } from "@/features/goals/actions/create-goal-action";
@@ -116,11 +116,8 @@ export function GoalForm({ goal, returnHref }: GoalFormProps) {
 
   return (
     <Card className="border-primary/10 bg-card/95">
-      <CardHeader className="space-y-3">
-        <div className="space-y-1">
-          <CardTitle className="text-xl">{isEditing ? "Editar meta" : "Nova meta"}</CardTitle>
-          <CardDescription>Valor alvo, valor acumulado e prazo opcional.</CardDescription>
-        </div>
+      <CardHeader>
+        <CardTitle className="text-xl">{isEditing ? "Editar meta" : "Nova meta"}</CardTitle>
       </CardHeader>
       <CardContent>
         <form className="space-y-5" onSubmit={handleSubmit}>
@@ -168,7 +165,7 @@ export function GoalForm({ goal, returnHref }: GoalFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="targetDate">Data alvo</Label>
+            <Label htmlFor="targetDate">Prazo</Label>
             <Input disabled={isPending} id="targetDate" type="date" {...form.register("targetDate")} />
             <FieldErrorMessage message={form.formState.errors.targetDate?.message} />
           </div>
@@ -187,11 +184,11 @@ export function GoalForm({ goal, returnHref }: GoalFormProps) {
           <div className="flex flex-wrap gap-3">
             <Button disabled={isPending} type="submit">
               {isPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
-              {isEditing ? "Salvar alterações" : "Criar meta"}
+              {isEditing ? "Salvar" : "Criar meta"}
             </Button>
             {isEditing ? (
               <Button asChild type="button" variant="outline">
-                <Link href={returnHref}>Cancelar edição</Link>
+                <Link href={returnHref}>Cancelar</Link>
               </Button>
             ) : (
               <Button
@@ -203,7 +200,7 @@ export function GoalForm({ goal, returnHref }: GoalFormProps) {
                 type="button"
                 variant="outline"
               >
-                Limpar formulário
+                Limpar
               </Button>
             )}
           </div>

@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { AlertTriangle, Gauge, PencilLine } from "lucide-react";
+import { PencilLine } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { BudgetListItem } from "@/features/budgets/types/budget";
 import { buildBudgetsHref } from "@/features/budgets/utils/build-budgets-href";
 import { getBudgetConsumptionStatusLabel } from "@/features/budgets/utils/budget-consumption";
@@ -44,15 +44,12 @@ export function BudgetsList({ budgets, editingBudgetId, competencyMonth }: Budge
   return (
     <Card className="border-primary/10 bg-card/85">
       <CardHeader className="space-y-1">
-        <CardTitle className="font-display text-3xl">Orçamentos do mês</CardTitle>
-        <CardDescription>
-          Cada orçamento é único por categoria e competência. O consumo usa despesas pagas da categoria no mês.
-        </CardDescription>
+        <CardTitle className="text-xl">Orçamentos</CardTitle>
       </CardHeader>
       <CardContent>
         {budgets.length === 0 ? (
           <div className="rounded-[1.5rem] border border-dashed border-border bg-background/60 px-5 py-8 text-center text-sm text-muted-foreground">
-            Nenhum orçamento encontrado nesta competência. Use o formulário ao lado para criar o primeiro limite mensal.
+            Nenhum orçamento nesta competência.
           </div>
         ) : (
           <div className="space-y-3">
@@ -107,21 +104,6 @@ export function BudgetsList({ budgets, editingBudgetId, competencyMonth }: Budge
                         width: `${budget.progressPercentage}%`
                       }}
                     />
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                    <span className="inline-flex items-center gap-2">
-                      <Gauge className="h-4 w-4" />
-                      Alertas em {budget.alertThresholds.join("%, ")}%
-                    </span>
-                    {budget.consumptionStatus !== "within_limit" ? (
-                      <span className="inline-flex items-center gap-2">
-                        <AlertTriangle className="h-4 w-4" />
-                        {budget.consumptionStatus === "warning"
-                          ? "O orçamento passou de 80%."
-                          : "O orçamento ultrapassou 100%."}
-                      </span>
-                    ) : null}
                   </div>
                 </div>
               </div>

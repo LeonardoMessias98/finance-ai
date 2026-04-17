@@ -10,8 +10,8 @@ export function AppShell({ children }: AppShellProps) {
   return (
     <div className="min-h-screen">
       <AppHeader />
-      <main className="pb-12 pt-6">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6">{children}</div>
+      <main className="pb-12 pt-10 sm:pt-12">
+        <div className="mx-auto max-w-5xl px-4 sm:px-6">{children}</div>
       </main>
     </div>
   );

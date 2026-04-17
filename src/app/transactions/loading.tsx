@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 export default function TransactionsLoading() {
   return (
     <AppShell>
-      <section className="space-y-6">
+      <section className="space-y-6 pt-1">
         <Card className="border-primary/10 bg-card/85">
           <CardHeader>
             <CardTitle className="font-display text-3xl">Carregando transações</CardTitle>

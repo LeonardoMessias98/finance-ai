@@ -57,6 +57,30 @@ export function getTransactionStatusOptions(transactionType: TransactionType): r
   return statusByTransactionType[transactionType];
 }
 
+export function getTransactionTypeDotClassName(transactionType: TransactionType): string {
+  if (transactionType === "income") {
+    return "bg-green-500";
+  }
+
+  if (transactionType === "expense") {
+    return "bg-destructive";
+  }
+
+  return "bg-primary";
+}
+
+export function getTransactionTypeAmountClassName(transactionType: TransactionType): string {
+  if (transactionType === "income") {
+    return "text-income";
+  }
+
+  if (transactionType === "expense") {
+    return "text-destructive";
+  }
+
+  return "text-foreground";
+}
+
 export function formatTransactionAmountFromCents(amountInCents: number): string {
   return currencyFormatter.format(amountInCents / 100);
 }

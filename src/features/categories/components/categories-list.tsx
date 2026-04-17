@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { FolderTree, PencilLine } from "lucide-react";
+import { PencilLine } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CategoryDeleteButton } from "@/features/categories/components/category-delete-button";
 import { CategoryStatusToggleButton } from "@/features/categories/components/category-status-toggle-button";
 import type { Category, CategoryType } from "@/features/categories/types/category";
 import { getCategoryTypeLabel } from "@/features/categories/utils/category-formatters";
@@ -30,48 +31,38 @@ function CategoryGroup({
   return (
     <Card className="border-primary/10 bg-card/85">
       <CardHeader className="space-y-1">
-        <CardTitle className="font-display text-3xl">{getCategoryTypeLabel(type)}</CardTitle>
-        <CardDescription>
-          {categories.length === 0
-            ? "Nenhuma categoria cadastrada neste tipo."
-            : `${categories.length} categoria(s) cadastrada(s) neste grupo.`}
-        </CardDescription>
+        <CardTitle className="text-xl">{getCategoryTypeLabel(type)}</CardTitle>
       </CardHeader>
       <CardContent>
         {categories.length === 0 ? (
           <div className="rounded-[1.5rem] border border-dashed border-border bg-background/60 px-5 py-8 text-center text-sm text-muted-foreground">
-            Crie a primeira categoria deste tipo usando o formulário ao lado.
+            Nenhuma categoria neste tipo.
           </div>
         ) : (
           <div className="space-y-3">
             {categories.map((category) => (
               <div
                 className={cn(
-                  "grid gap-4 rounded-[1.5rem] border border-border/80 bg-background/70 p-4 lg:grid-cols-[1fr_auto]",
+                  "grid gap-8 rounded-[1.5rem] border border-border/80 bg-background/70 p-4",
                   editingCategoryId === category.id ? "border-primary/40 bg-primary/5" : ""
                 )}
                 key={category.id}
               >
                 <div className="flex items-start gap-4">
-                  <div
-                    className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white"
+                  <span
+                    className="mt-1 h-3 w-3 shrink-0 rounded-full"
                     style={{
                       backgroundColor: category.color ?? "hsl(156 54% 27%)"
                     }}
-                  >
-                    <FolderTree className="h-5 w-5" />
-                  </div>
-                  <div className="space-y-3">
+                  />
+                  <div className="space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="text-lg font-semibold text-foreground">{category.name}</p>
                       <Badge variant={category.isActive ? "default" : "secondary"}>
                         {category.isActive ? "Ativa" : "Inativa"}
                       </Badge>
                     </div>
-                    <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                      <span>{getCategoryTypeLabel(category.type)}</span>
-                      {category.icon ? <span>Ícone {category.icon}</span> : null}
-                    </div>
+                    <p className="text-sm text-muted-foreground">{getCategoryTypeLabel(category.type)}</p>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-start gap-3 lg:justify-end">
@@ -81,7 +72,10 @@ function CategoryGroup({
                       Editar
                     </Link>
                   </Button>
-                  <CategoryStatusToggleButton categoryId={category.id} isActive={category.isActive} />
+                  <CategoryDeleteButton
+                    categoryId={category.id}
+                    redirectHref={selectedType ? `/categories?type=${selectedType}` : "/categories"}
+                  />
                 </div>
               </div>
             ))}

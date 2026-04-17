@@ -9,23 +9,19 @@ type DashboardSummaryCardsProps = {
 
 export function DashboardSummaryCards({ summary }: DashboardSummaryCardsProps) {
   return (
-    <div className="grid gap-3 md:grid-cols-3">
-      <Card>
-        <CardContent className="space-y-2 pt-5">
+    <Card>
+      <CardContent className="grid gap-4 pt-5 sm:grid-cols-3">
+        <div className="space-y-1">
           <p className="text-sm text-muted-foreground">Entradas</p>
           <p className="text-2xl font-semibold text-income">{formatAccountBalanceFromCents(summary.monthlyIncome)}</p>
-        </CardContent>
-      </Card>
+        </div>
 
-      <Card>
-        <CardContent className="space-y-2 pt-5">
+        <div className="space-y-1">
           <p className="text-sm text-muted-foreground">Saídas</p>
           <p className="text-2xl font-semibold text-destructive">{formatAccountBalanceFromCents(summary.monthlyExpense)}</p>
-        </CardContent>
-      </Card>
+        </div>
 
-      <Card>
-        <CardContent className="space-y-2 pt-5">
+        <div className="space-y-1">
           <p className="text-sm text-muted-foreground">Resultado</p>
           <p
             className={cn(
@@ -35,8 +31,8 @@ export function DashboardSummaryCards({ summary }: DashboardSummaryCardsProps) {
           >
             {formatAccountBalanceFromCents(summary.monthlyResult)}
           </p>
-        </CardContent>
-      </Card>
-    </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }

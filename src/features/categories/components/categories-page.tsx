@@ -1,5 +1,4 @@
 import { AppShell } from "@/components/layout/app-shell";
-import { Card, CardContent } from "@/components/ui/card";
 import { CategoriesList } from "@/features/categories/components/categories-list";
 import { CategoryForm } from "@/features/categories/components/category-form";
 import { CategoryTypeFilter } from "@/features/categories/components/category-type-filter";
@@ -20,13 +19,11 @@ export async function CategoriesPage({ editingCategoryId, selectedType }: Catego
     editingCategoryId ? getCategoryForEditing(editingCategoryId) : Promise.resolve(null)
   ]);
 
-  const activeCategories = categories.filter((category) => category.isActive);
-  const inactiveCategories = categories.filter((category) => !category.isActive);
   const hasEditingError = Boolean(editingCategoryId) && !editingCategory;
 
   return (
     <AppShell>
-      <section className="space-y-6">
+      <section className="space-y-6 pt-1">
         <div className="space-y-1">
           <h1 className="text-3xl font-semibold tracking-tight text-foreground">Categorias</h1>
           <p className="text-sm text-muted-foreground">
@@ -41,27 +38,6 @@ export async function CategoriesPage({ editingCategoryId, selectedType }: Catego
         ) : null}
 
         <CategoryTypeFilter selectedType={selectedType} />
-
-        <div className="grid gap-3 md:grid-cols-3">
-          <Card>
-            <CardContent className="space-y-2 pt-5">
-              <p className="text-sm text-muted-foreground">Na visão atual</p>
-              <p className="text-2xl font-semibold text-foreground">{categories.length}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="space-y-2 pt-5">
-              <p className="text-sm text-muted-foreground">Ativas</p>
-              <p className="text-2xl font-semibold text-foreground">{activeCategories.length}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="space-y-2 pt-5">
-              <p className="text-sm text-muted-foreground">Inativas</p>
-              <p className="text-2xl font-semibold text-muted-foreground">{inactiveCategories.length}</p>
-            </CardContent>
-          </Card>
-        </div>
 
         <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
           <CategoriesList

@@ -1,6 +1,5 @@
 import Link from "next/link";
 
-import { Badge } from "@/components/ui/badge";
 import { categoryTypeValues, type CategoryType } from "@/features/categories/types/category";
 import { getCategoryTypeLabel } from "@/features/categories/utils/category-formatters";
 import { cn } from "@/lib/utils";
@@ -12,7 +11,6 @@ type CategoryTypeFilterProps = {
 export function CategoryTypeFilter({ selectedType }: CategoryTypeFilterProps) {
   return (
     <div className="flex flex-wrap items-center gap-3">
-      <Badge variant="outline">Filtro por tipo</Badge>
       <Link
         className={cn(
           "rounded-full px-4 py-2 text-sm font-medium transition-colors",

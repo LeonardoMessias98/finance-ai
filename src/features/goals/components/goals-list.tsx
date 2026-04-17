@@ -1,9 +1,9 @@
 import Link from "next/link";
-import { CheckCircle2, CircleDashed, PencilLine, Target } from "lucide-react";
+import { PencilLine } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { GoalListItem } from "@/features/goals/types/goal";
 import { buildGoalsHref } from "@/features/goals/utils/build-goals-href";
 import { formatGoalAmountFromCents, formatGoalDate, getGoalStatusLabel } from "@/features/goals/utils/goal-formatters";
@@ -26,15 +26,12 @@ export function GoalsList({ goals, editingGoalId }: GoalsListProps) {
   return (
     <Card className="border-primary/10 bg-card/85">
       <CardHeader className="space-y-1">
-        <CardTitle className="font-display text-3xl">Metas financeiras</CardTitle>
-        <CardDescription>
-          O status é atualizado automaticamente quando o valor acumulado alcança ou supera o valor alvo.
-        </CardDescription>
+        <CardTitle className="text-xl">Metas</CardTitle>
       </CardHeader>
       <CardContent>
         {goals.length === 0 ? (
           <div className="rounded-[1.5rem] border border-dashed border-border bg-background/60 px-5 py-8 text-center text-sm text-muted-foreground">
-            Nenhuma meta cadastrada ainda. Use o formulário ao lado para criar a primeira meta financeira.
+            Nenhuma meta cadastrada.
           </div>
         ) : (
           <div className="space-y-3">
@@ -88,19 +85,6 @@ export function GoalsList({ goals, editingGoalId }: GoalsListProps) {
                         width: `${goal.cappedProgressPercentage}%`
                       }}
                     />
-                  </div>
-
-                  <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                    <span className="inline-flex items-center gap-2">
-                      {goal.isCompleted ? <CheckCircle2 className="h-4 w-4" /> : <CircleDashed className="h-4 w-4" />}
-                      {goal.isCompleted ? "Meta concluída automaticamente." : "Meta em construção."}
-                    </span>
-                    <span className="inline-flex items-center gap-2">
-                      <Target className="h-4 w-4" />
-                      {goal.isCompleted
-                        ? "Objetivo financeiro alcançado."
-                        : `Falta ${formatGoalAmountFromCents(goal.remainingAmount)} para concluir.`}
-                    </span>
                   </div>
                 </div>
               </div>

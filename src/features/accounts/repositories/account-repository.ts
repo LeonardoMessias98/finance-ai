@@ -7,6 +7,7 @@ import type { Account, AccountFilters, CreateAccountInput, UpdateAccountInput } 
 import { connectToDatabase } from "@/lib/db/connect";
 import { isObjectIdString } from "@/lib/db/object-id";
 import { type AccountDocument, AccountModel } from "@/lib/db/models/account-model";
+import { TransactionModel } from "@/lib/db/models/transaction-model";
 
 function mapAccountDocument(document: HydratedDocument<AccountDocument>): Account {
   return {
@@ -106,6 +107,37 @@ export async function setAccountActiveState(accountId: string, isActive: boolean
       runValidators: true
     }
   ).exec();
+
+  return document ? mapAccountDocument(document) : null;
+}
+
+export async function countTransactionsByAccountId(accountId: string): Promise<number> {
+  if (!isObjectIdString(accountId)) {
+    return 0;
+  }
+
+  await connectToDatabase();
+
+  return TransactionModel.countDocuments({
+    $or: [
+      {
+        accountId
+      },
+      {
+        destinationAccountId: accountId
+      }
+    ]
+  }).exec();
+}
+
+export async function deleteAccount(accountId: string): Promise<Account | null> {
+  if (!isObjectIdString(accountId)) {
+    return null;
+  }
+
+  await connectToDatabase();
+
+  const document = await AccountModel.findByIdAndDelete(accountId).exec();
 
   return document ? mapAccountDocument(document) : null;
 }

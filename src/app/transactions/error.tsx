@@ -14,7 +14,7 @@ type TransactionsErrorPageProps = {
 export default function TransactionsErrorPage({ error, reset }: TransactionsErrorPageProps) {
   return (
     <AppShell>
-      <section className="space-y-6">
+      <section className="space-y-6 pt-1">
         <Card className="border-destructive/20 bg-card/85">
           <CardHeader className="space-y-2">
             <CardTitle className="font-display text-3xl">Não foi possível carregar as transações</CardTitle>

@@ -24,22 +24,22 @@ export function CompetencyMonthSwitcher({
   currentHref,
   formAction,
   hiddenFields = [],
-  inputLabel = "Competência",
+  inputLabel = "Mês",
   nextHref,
   previousHref,
-  submitLabel = "Aplicar mês"
+  submitLabel = "Ir"
 }: CompetencyMonthSwitcherProps) {
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap gap-3">
         <Button asChild type="button" variant="outline">
-          <Link href={previousHref}>Mês anterior</Link>
+          <Link href={previousHref}>Anterior</Link>
         </Button>
         <Button asChild type="button" variant="outline">
-          <Link href={currentHref}>Mês atual</Link>
+          <Link href={currentHref}>Atual</Link>
         </Button>
         <Button asChild type="button" variant="outline">
-          <Link href={nextHref}>Próximo mês</Link>
+          <Link href={nextHref}>Próximo</Link>
         </Button>
       </div>
 

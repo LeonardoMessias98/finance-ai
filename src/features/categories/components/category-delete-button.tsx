@@ -1,0 +1,60 @@
+"use client";
+
+import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
+import { LoaderCircle, Trash2 } from "lucide-react";
+
+import { Button } from "@/components/ui/button";
+import { deleteCategoryAction } from "@/features/categories/actions/delete-category-action";
+
+type CategoryDeleteButtonProps = {
+  categoryId: string;
+  redirectHref: string;
+};
+
+export function CategoryDeleteButton({ categoryId, redirectHref }: CategoryDeleteButtonProps) {
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  function handleDelete() {
+    const shouldDelete = window.confirm("Excluir esta categoria? Essa ação não pode ser desfeita.");
+
+    if (!shouldDelete) {
+      return;
+    }
+
+    setErrorMessage(null);
+
+    startTransition(async () => {
+      const result = await deleteCategoryAction({
+        categoryId
+      });
+
+      if (result.status === "error") {
+        setErrorMessage(result.message);
+        return;
+      }
+
+      router.replace(redirectHref);
+      router.refresh();
+    });
+  }
+
+  return (
+    <div className="flex flex-col items-start gap-2">
+      <Button
+        className="border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive"
+        disabled={isPending}
+        onClick={handleDelete}
+        size="sm"
+        type="button"
+        variant="outline"
+      >
+        {isPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+        Excluir
+      </Button>
+      {errorMessage ? <p className="text-sm text-destructive">{errorMessage}</p> : null}
+    </div>
+  );
+}

@@ -1,6 +1,27 @@
 # Finance AI
 
-Base inicial do projeto `finance-ai`, preparada para desenvolvimento rápido com IA.
+`finance-ai` é uma ferramenta pessoal de controle financeiro inspirada no uso de planilhas.
+
+A direção do produto não é a de uma plataforma financeira complexa. O foco é abrir rápido, ver saldo, consultar transações e registrar novos lançamentos com pouco atrito.
+
+## Direção do produto
+
+- foco principal em saldo e transações
+- navegação financeira guiada por mês
+- interface minimalista
+- dark mode por padrão
+- tipografia com `Inter`
+- remoção contínua de excessos visuais e informacionais
+- prioridade para velocidade de uso no MVP
+
+## Escopo atual do MVP
+
+O MVP deve parecer uma planilha pessoal bem resolvida:
+
+- home centrada em saldo atual, resumo do mês e transações recentes
+- histórico mensal com filtros simples
+- criação rápida de transação
+- módulos auxiliares como contas, categorias, orçamentos e metas com peso secundário
 
 ## Stack
 
@@ -16,16 +37,6 @@ Base inicial do projeto `finance-ai`, preparada para desenvolvimento rápido com
 - Testing Library
 - Playwright
 
-## Objetivo
-
-Deixar o projeto pronto para crescer sem atrito:
-
-- estrutura clara por feature
-- regras simples para manutenção por agentes de IA
-- conexão central com MongoDB Atlas via Mongoose
-- base de testes pronta desde o bootstrap
-- dashboard inicial vazio para evolução incremental
-
 ## Estrutura
 
 ```text
@@ -33,7 +44,6 @@ src/
   app/
   components/
     layout/
-  components/
     ui/
   features/
     dashboard/
@@ -68,19 +78,19 @@ npm install
 cp .env.example .env.local
 ```
 
-Se preferir, o CLI tambem consegue ler `.env`, mas `.env.local` continua sendo o caminho recomendado para ambiente local.
+Se preferir, o CLI também consegue ler `.env`, mas `.env.local` continua sendo o caminho recomendado para ambiente local.
 
 3. Configure:
 
 - `MONGODB_URI`
 
-Use uma URI completa, com usuario, senha e nome do banco. Exemplo:
+Use uma URI completa, com usuário, senha e nome do banco. Exemplo:
 
 ```bash
 MONGODB_URI="mongodb+srv://<user>:<password>@<cluster>/finance-ai?retryWrites=true&w=majority"
 ```
 
-Se a senha tiver caracteres especiais, faca URL encoding antes de salvar a URI.
+Se a senha tiver caracteres especiais, faça URL encoding antes de salvar a URI.
 
 4. Rode a aplicação:
 
@@ -104,7 +114,7 @@ npm run test:e2e:install
 
 ## Seed inicial
 
-O projeto inclui um seed idempotente para popular contas e categorias padrao sem duplicar registros existentes.
+O projeto inclui um seed idempotente para popular contas e categorias padrão sem duplicar registros existentes.
 
 Comando base:
 
@@ -112,32 +122,32 @@ Comando base:
 npm run seed
 ```
 
-Para incluir dados opcionais de exemplo para desenvolvimento rapido:
+Para incluir dados opcionais de exemplo para desenvolvimento rápido:
 
 ```bash
 npm run seed -- --with-sample-data
 ```
 
-O script carrega variaveis locais via `@next/env` e usa `MONGODB_URI` para conectar no MongoDB. `.env.local` e o formato recomendado, mas `.env` tambem funciona.
+O script carrega variáveis locais via `@next/env` e usa `MONGODB_URI` para conectar no MongoDB. `.env.local` é o formato recomendado, mas `.env` também funciona.
 
-Dados criados por padrao:
+Dados criados por padrão:
 
-- contas padrao
+- contas padrão
 - categorias de receita
 - categorias de despesa
-- categoria de transferencia interna
+- categoria de transferência interna
 
 Dados opcionais com `--with-sample-data`:
 
-- transacoes de exemplo no mes atual
-- um orcamento de exemplo
+- transações de exemplo no mês atual
+- um orçamento de exemplo
 - uma meta de exemplo
 
 ## Testes
 
 - `Vitest` e `Testing Library` ficam prontos para testes unitários e de componente
 - `Playwright` fica pronto para testes end-to-end
-- Se for a primeira execução de E2E, rode `npm run test:e2e:install` para baixar os navegadores
+- se for a primeira execução de E2E, rode `npm run test:e2e:install` para baixar os navegadores
 
 ## Regras de arquitetura
 
@@ -150,7 +160,7 @@ Dados opcionais com `--with-sample-data`:
 
 ## MongoDB
 
-A conexão com MongoDB fica centralizada em [src/lib/db/connect.ts](/home/messias/work/finance-ai/src/lib/db/connect.ts). O helper reutiliza a instância do Mongoose em desenvolvimento para evitar múltiplas conexões no hot reload do Next.js.
+A conexão com MongoDB fica centralizada em [connect.ts](/home/messias/work/finance-ai/src/lib/db/connect.ts). O helper reutiliza a instância do Mongoose em desenvolvimento para evitar múltiplas conexões no hot reload do Next.js.
 
 Uso básico:
 
@@ -171,8 +181,9 @@ Estrutura preparada:
 
 ## Estado atual
 
-- layout base pronto
-- dashboard inicial vazio
-- conexão MongoDB pronta para uso
-- stack de testes configurada
-- documentação operacional criada para outros agentes
+- interface dark mode minimalista
+- fonte `Inter` aplicada globalmente
+- saldo e transações como centro da experiência
+- navegação por competência mensal
+- criação de transação simplificada
+- documentação operacional pronta para outros agentes

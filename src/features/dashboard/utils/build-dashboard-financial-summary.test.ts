@@ -150,4 +150,24 @@ describe("buildDashboardFinancialSummary", () => {
     );
     expect(summary.latestTransactions.some((transaction) => transaction.id === "transaction-5")).toBe(false);
   });
+
+  it("filters only the latest transactions list when a type is selected", () => {
+    const summary = buildDashboardFinancialSummary({
+      accounts,
+      categories,
+      transactions,
+      competencyMonth: "2026-04",
+      latestTransactionsType: "income"
+    });
+
+    expect(summary.monthlyIncome).toBe(3_000);
+    expect(summary.monthlyExpense).toBe(1_000);
+    expect(summary.latestTransactions).toHaveLength(1);
+    expect(summary.latestTransactions[0]).toEqual(
+      expect.objectContaining({
+        id: "transaction-1",
+        type: "income"
+      })
+    );
+  });
 });

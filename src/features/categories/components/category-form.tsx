@@ -8,7 +8,7 @@ import { LoaderCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -117,11 +117,8 @@ export function CategoryForm({ category, defaultType }: CategoryFormProps) {
 
   return (
     <Card className="border-primary/10 bg-card/95">
-      <CardHeader className="space-y-3">
-        <div className="space-y-1">
-          <CardTitle className="text-xl">{isEditing ? "Editar categoria" : "Nova categoria"}</CardTitle>
-          <CardDescription>Tipo, nome e sinais visuais da categoria.</CardDescription>
-        </div>
+      <CardHeader>
+        <CardTitle className="text-xl">{isEditing ? "Editar categoria" : "Nova categoria"}</CardTitle>
       </CardHeader>
       <CardContent>
         <form className="space-y-5" onSubmit={handleSubmit}>
@@ -163,7 +160,7 @@ export function CategoryForm({ category, defaultType }: CategoryFormProps) {
 
           <label className="flex items-center gap-3 rounded-[1.25rem] border border-border bg-background/70 px-4 py-3 text-sm text-foreground">
             <input className="h-4 w-4 rounded border-input text-primary" disabled={isPending} type="checkbox" {...form.register("isActive")} />
-            Categoria ativa para uso operacional
+            Ativa
           </label>
 
           {feedback ? (
@@ -180,11 +177,11 @@ export function CategoryForm({ category, defaultType }: CategoryFormProps) {
           <div className="flex flex-wrap gap-3">
             <Button disabled={isPending} type="submit">
               {isPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
-              {isEditing ? "Salvar alterações" : "Criar categoria"}
+              {isEditing ? "Salvar" : "Criar categoria"}
             </Button>
             {isEditing ? (
               <Button asChild type="button" variant="outline">
-                <Link href="/categories">Cancelar edição</Link>
+                <Link href="/categories">Cancelar</Link>
               </Button>
             ) : (
               <Button
@@ -196,7 +193,7 @@ export function CategoryForm({ category, defaultType }: CategoryFormProps) {
                 type="button"
                 variant="outline"
               >
-                Limpar formulário
+                Limpar
               </Button>
             )}
           </div>

@@ -1,52 +1,73 @@
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DashboardLatestTransaction } from "@/features/dashboard/types/dashboard-financial-summary";
+import { TransactionMetaBadge } from "@/features/transactions/components/transaction-meta-badge";
+import { TransactionTypeFilter } from "@/features/transactions/components/transaction-type-filter";
+import type { TransactionType } from "@/features/transactions/types/transaction";
+import { buildDashboardHref } from "@/features/dashboard/utils/build-dashboard-href";
 import { buildTransactionsHref } from "@/features/transactions/utils/build-transactions-href";
 import {
   formatTransactionAmountFromCents,
   formatTransactionDate,
+  getTransactionTypeAmountClassName,
+  getTransactionTypeDotClassName,
   getTransactionStatusLabel,
   getTransactionTypeLabel
 } from "@/features/transactions/utils/transaction-formatters";
-import { cn } from "@/lib/utils";
 
 type DashboardLatestTransactionsProps = {
   competencyMonth: string;
   latestTransactions: DashboardLatestTransaction[];
+  selectedType?: TransactionType;
 };
 
-function getAmountClassName(type: DashboardLatestTransaction["type"]): string {
-  if (type === "income") {
-    return "text-income";
-  }
+export function DashboardLatestTransactions({
+  competencyMonth,
+  latestTransactions,
+  selectedType
+}: DashboardLatestTransactionsProps) {
+  const transactionsHref = buildTransactionsHref({
+    competencyMonth,
+    type: selectedType
+  });
+  const emptyStateMessage = selectedType
+    ? `Nenhuma ${getTransactionTypeLabel(selectedType).toLowerCase()} neste mês.`
+    : "Nenhuma transação neste mês.";
 
-  if (type === "expense") {
-    return "text-destructive";
-  }
-
-  return "text-foreground";
-}
-
-export function DashboardLatestTransactions({ competencyMonth, latestTransactions }: DashboardLatestTransactionsProps) {
   return (
     <Card>
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-xl">Recentes</CardTitle>
-        <CardDescription>Entradas e saídas do mês selecionado.</CardDescription>
+      <CardHeader className="space-y-4">
+        <div className="flex flex-row items-center justify-between gap-3">
+          <CardTitle className="text-xl">Recentes</CardTitle>
+          <Button asChild size="sm" variant="ghost">
+            <Link href={transactionsHref}>Histórico</Link>
+          </Button>
+        </div>
+
+        <TransactionTypeFilter
+          buildHref={(type) =>
+            buildDashboardHref({
+              competencyMonth,
+              type
+            })
+          }
+          selectedType={selectedType}
+        />
       </CardHeader>
       <CardContent>
         {latestTransactions.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-secondary px-4 py-8 text-center text-sm text-muted-foreground">
-            Nenhuma transação neste mês.
+            {emptyStateMessage}
           </div>
         ) : (
           <div className="space-y-2">
             {latestTransactions.map((transaction) => {
               const editHref = buildTransactionsHref({
                 competencyMonth,
-                transactionId: transaction.id
+                transactionId: transaction.id,
+                type: selectedType
               });
 
               return (
@@ -56,30 +77,24 @@ export function DashboardLatestTransactions({ competencyMonth, latestTransaction
                 >
                   <div className="space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span
-                        className={cn(
-                          "h-2.5 w-2.5 rounded-full",
-                          transaction.type === "income"
-                            ? "bg-income"
-                            : transaction.type === "expense"
-                              ? "bg-destructive"
-                              : "bg-primary"
-                        )}
-                      />
+                      <span className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${getTransactionTypeDotClassName(transaction.type)}`} />
                       <p className="text-sm font-medium text-foreground">{transaction.description}</p>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      {formatTransactionDate(transaction.date)} · {getTransactionTypeLabel(transaction.type)} ·{" "}
-                      {getTransactionStatusLabel(transaction.status)}
+                      {formatTransactionDate(transaction.date)} · {getTransactionStatusLabel(transaction.status)}
                     </p>
-                    <p className="text-sm text-muted-foreground">
-                      {transaction.accountName}
-                      {transaction.destinationAccountName ? ` -> ${transaction.destinationAccountName}` : ""}
-                      {transaction.categoryName ? ` · ${transaction.categoryName}` : ""}
-                    </p>
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                      <TransactionMetaBadge>{transaction.accountName}</TransactionMetaBadge>
+                      {transaction.destinationAccountName ? (
+                        <TransactionMetaBadge>{transaction.destinationAccountName}</TransactionMetaBadge>
+                      ) : null}
+                      {transaction.categoryName ? (
+                        <TransactionMetaBadge tone="category">{transaction.categoryName}</TransactionMetaBadge>
+                      ) : null}
+                    </div>
                   </div>
                   <div className="flex items-center justify-between gap-3 lg:flex-col lg:items-end">
-                    <p className={cn("text-base font-semibold", getAmountClassName(transaction.type))}>
+                    <p className={`text-base font-semibold ${getTransactionTypeAmountClassName(transaction.type)}`}>
                       {transaction.type === "income" ? "+" : transaction.type === "expense" ? "-" : ""}
                       {formatTransactionAmountFromCents(transaction.amount)}
                     </p>

@@ -4,3 +4,10 @@ export class DuplicateCategoryError extends Error {
     this.name = "DuplicateCategoryError";
   }
 }
+
+export class CategoryHasTransactionsError extends Error {
+  constructor(message = "Essa categoria já foi usada em transações e não pode ser excluída.") {
+    super(message);
+    this.name = "CategoryHasTransactionsError";
+  }
+}

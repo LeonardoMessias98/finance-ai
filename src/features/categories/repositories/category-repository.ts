@@ -13,6 +13,7 @@ import type {
 import { connectToDatabase } from "@/lib/db/connect";
 import { isObjectIdString } from "@/lib/db/object-id";
 import { type CategoryDocument, CategoryModel } from "@/lib/db/models/category-model";
+import { TransactionModel } from "@/lib/db/models/transaction-model";
 
 function mapCategoryDocument(document: HydratedDocument<CategoryDocument>): Category {
   return {
@@ -136,6 +137,30 @@ export async function findCategoryByNameAndType(input: {
     locale: "en",
     strength: 2
   });
+
+  return document ? mapCategoryDocument(document) : null;
+}
+
+export async function countTransactionsByCategoryId(categoryId: string): Promise<number> {
+  if (!isObjectIdString(categoryId)) {
+    return 0;
+  }
+
+  await connectToDatabase();
+
+  return TransactionModel.countDocuments({
+    categoryId
+  }).exec();
+}
+
+export async function deleteCategory(categoryId: string): Promise<Category | null> {
+  if (!isObjectIdString(categoryId)) {
+    return null;
+  }
+
+  await connectToDatabase();
+
+  const document = await CategoryModel.findByIdAndDelete(categoryId).exec();
 
   return document ? mapCategoryDocument(document) : null;
 }

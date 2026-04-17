@@ -1,13 +1,12 @@
 import Link from "next/link";
-import { AlertCircle } from "lucide-react";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { DashboardLatestTransactions } from "@/features/dashboard/components/dashboard-latest-transactions";
 import { DashboardMonthFilter } from "@/features/dashboard/components/dashboard-month-filter";
 import { DashboardSummaryCards } from "@/features/dashboard/components/dashboard-summary-cards";
 import { getDashboardFinancialSummary } from "@/features/dashboard/services/get-dashboard-financial-summary-service";
+import type { TransactionType } from "@/features/transactions/types/transaction";
 import { buildTransactionsHref } from "@/features/transactions/utils/build-transactions-href";
 import { createEmptyDashboardFinancialSummary } from "@/features/dashboard/utils/build-dashboard-financial-summary";
 import { formatAccountBalanceFromCents } from "@/features/accounts/utils/account-formatters";
@@ -16,9 +15,10 @@ import { hasMongoDatabaseUri } from "@/lib/db/connect";
 
 type DashboardPageProps = {
   competencyMonth: string;
+  selectedType?: TransactionType;
 };
 
-export async function DashboardPage({ competencyMonth }: DashboardPageProps) {
+export async function DashboardPage({ competencyMonth, selectedType }: DashboardPageProps) {
   const isDatabaseConfigured = hasMongoDatabaseUri();
   let dashboardSummary = createEmptyDashboardFinancialSummary(competencyMonth);
   let loadingErrorMessage: string | null = null;
@@ -26,7 +26,8 @@ export async function DashboardPage({ competencyMonth }: DashboardPageProps) {
   if (isDatabaseConfigured) {
     try {
       dashboardSummary = await getDashboardFinancialSummary({
-        competencyMonth
+        competencyMonth,
+        latestTransactionsType: selectedType
       });
     } catch (error) {
       console.error("Failed to load dashboard financial summary.", error);
@@ -36,7 +37,7 @@ export async function DashboardPage({ competencyMonth }: DashboardPageProps) {
 
   return (
     <AppShell>
-      <section className="space-y-6">
+      <section className="space-y-6 pt-1">
         <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-2">
             <p className="text-sm text-muted-foreground">{formatTransactionCompetencyMonth(dashboardSummary.competencyMonth)}</p>
@@ -52,7 +53,8 @@ export async function DashboardPage({ competencyMonth }: DashboardPageProps) {
             <Button asChild>
               <Link
                 href={buildTransactionsHref({
-                  competencyMonth: dashboardSummary.competencyMonth
+                  competencyMonth: dashboardSummary.competencyMonth,
+                  type: selectedType
                 })}
               >
                 Nova transação
@@ -61,39 +63,36 @@ export async function DashboardPage({ competencyMonth }: DashboardPageProps) {
             <Button asChild variant="outline">
               <Link
                 href={buildTransactionsHref({
-                  competencyMonth: dashboardSummary.competencyMonth
+                  competencyMonth: dashboardSummary.competencyMonth,
+                  type: selectedType
                 })}
               >
-                Ver histórico
+                Histórico
               </Link>
             </Button>
           </div>
         </div>
 
         {!isDatabaseConfigured ? (
-          <Card>
-            <CardContent className="pt-5 text-sm text-muted-foreground">
-              Configure `MONGODB_URI` para ver saldo e movimentações reais.
-            </CardContent>
-          </Card>
+          <p className="rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+            Configure `MONGODB_URI` para ver saldo e movimentações reais.
+          </p>
         ) : null}
 
         {loadingErrorMessage ? (
-          <Card className="border-destructive/30">
-            <CardContent className="flex items-center gap-3 pt-5 text-sm text-destructive">
-              <AlertCircle className="h-4 w-4" />
-              {loadingErrorMessage}
-            </CardContent>
-          </Card>
+          <p className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+            {loadingErrorMessage}
+          </p>
         ) : null}
 
-        <DashboardMonthFilter competencyMonth={dashboardSummary.competencyMonth} />
+        <DashboardMonthFilter competencyMonth={dashboardSummary.competencyMonth} selectedType={selectedType} />
 
         <DashboardSummaryCards summary={dashboardSummary} />
 
         <DashboardLatestTransactions
           competencyMonth={dashboardSummary.competencyMonth}
           latestTransactions={dashboardSummary.latestTransactions}
+          selectedType={selectedType}
         />
       </section>
     </AppShell>

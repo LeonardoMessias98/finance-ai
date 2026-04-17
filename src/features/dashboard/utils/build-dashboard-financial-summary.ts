@@ -1,7 +1,7 @@
 import type { Account } from "@/features/accounts/types/account";
 import type { Category } from "@/features/categories/types/category";
 import type { DashboardFinancialSummary, DashboardCategoryTotal } from "@/features/dashboard/types/dashboard-financial-summary";
-import type { Transaction } from "@/features/transactions/types/transaction";
+import type { Transaction, TransactionType } from "@/features/transactions/types/transaction";
 
 const latestTransactionsLimit = 6;
 
@@ -127,6 +127,7 @@ export function buildDashboardFinancialSummary(input: {
   categories: Category[];
   transactions: Transaction[];
   competencyMonth: string;
+  latestTransactionsType?: TransactionType;
 }): DashboardFinancialSummary {
   const monthlyTransactions = sortTransactionsByDate(
     input.transactions.filter((transaction) => transaction.competencyMonth === input.competencyMonth)
@@ -135,6 +136,10 @@ export function buildDashboardFinancialSummary(input: {
   const appliedMonthlyTransactions = monthlyTransactions.filter(isAppliedTransaction);
   const monthlyIncomeTransactions = appliedMonthlyTransactions.filter((transaction) => transaction.type === "income");
   const monthlyExpenseTransactions = appliedMonthlyTransactions.filter((transaction) => transaction.type === "expense");
+  const latestTransactions = (input.latestTransactionsType
+    ? monthlyTransactions.filter((transaction) => transaction.type === input.latestTransactionsType)
+    : monthlyTransactions
+  ).slice(0, latestTransactionsLimit);
   const accountById = new Map(input.accounts.map((account) => [account.id, account]));
   const categoryById = new Map(input.categories.map((category) => [category.id, category]));
 
@@ -149,7 +154,7 @@ export function buildDashboardFinancialSummary(input: {
     accountBalances,
     incomeTotalsByCategory: aggregateCategoryTotals(monthlyIncomeTransactions, input.categories),
     expenseTotalsByCategory: aggregateCategoryTotals(monthlyExpenseTransactions, input.categories),
-    latestTransactions: monthlyTransactions.slice(0, latestTransactionsLimit).map((transaction) => ({
+    latestTransactions: latestTransactions.map((transaction) => ({
       id: transaction.id,
       description: transaction.description,
       amount: transaction.amount,

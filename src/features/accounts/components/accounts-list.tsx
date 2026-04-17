@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { Landmark, PencilLine } from "lucide-react";
+import { PencilLine } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { AccountDeleteButton } from "@/features/accounts/components/account-delete-button";
 import { AccountStatusToggleButton } from "@/features/accounts/components/account-status-toggle-button";
 import type { Account } from "@/features/accounts/types/account";
 import { formatAccountBalanceFromCents, getAccountTypeLabel } from "@/features/accounts/utils/account-formatters";
@@ -15,39 +16,36 @@ type AccountsListProps = {
 };
 
 export function AccountsList({ accounts, editingAccountId }: AccountsListProps) {
+  const redirectHref = "/accounts";
+
   return (
     <Card className="border-primary/10 bg-card/85">
       <CardHeader className="space-y-1">
-        <CardTitle className="font-display text-3xl">Contas cadastradas</CardTitle>
-        <CardDescription>
-          A listagem exibe contas ativas e inativas. Nos selects operacionais, o padrão deve ser usar apenas contas ativas.
-        </CardDescription>
+        <CardTitle className="text-xl">Contas</CardTitle>
       </CardHeader>
       <CardContent>
         {accounts.length === 0 ? (
           <div className="rounded-[1.5rem] border border-dashed border-border bg-background/60 px-5 py-8 text-center text-sm text-muted-foreground">
-            Nenhuma conta cadastrada ainda. Use o formulário ao lado para criar a primeira conta financeira.
+            Nenhuma conta cadastrada.
           </div>
         ) : (
           <div className="space-y-3">
             {accounts.map((account) => (
               <div
                 className={cn(
-                  "grid gap-4 rounded-[1.5rem] border border-border/80 bg-background/70 p-4 lg:grid-cols-[1fr_auto]",
+                  "grid gap-8 rounded-[1.5rem] border border-border/80 bg-background/70 p-4",
                   editingAccountId === account.id ? "border-primary/40 bg-primary/5" : ""
                 )}
                 key={account.id}
               >
                 <div className="flex items-start gap-4">
-                  <div
-                    className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white"
+                  <span
+                    className="mt-1 h-3 w-3 shrink-0 rounded-full"
                     style={{
                       backgroundColor: account.color ?? "hsl(156 54% 27%)"
                     }}
-                  >
-                    <Landmark className="h-5 w-5" />
-                  </div>
-                  <div className="space-y-3">
+                  />
+                  <div className="space-y-2">
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="text-lg font-semibold text-foreground">{account.name}</p>
                       <Badge variant={account.isActive ? "default" : "secondary"}>
@@ -55,10 +53,9 @@ export function AccountsList({ accounts, editingAccountId }: AccountsListProps) 
                       </Badge>
                       <Badge variant="outline">{getAccountTypeLabel(account.type)}</Badge>
                     </div>
-                    <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                      <span>Saldo inicial {formatAccountBalanceFromCents(account.initialBalance)}</span>
-                      {account.icon ? <span>Ícone {account.icon}</span> : null}
-                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Saldo inicial {formatAccountBalanceFromCents(account.initialBalance)}
+                    </p>
                   </div>
                 </div>
                 <div className="flex flex-wrap items-start gap-3 lg:justify-end">
@@ -68,7 +65,7 @@ export function AccountsList({ accounts, editingAccountId }: AccountsListProps) 
                       Editar
                     </Link>
                   </Button>
-                  <AccountStatusToggleButton accountId={account.id} isActive={account.isActive} />
+                  <AccountDeleteButton accountId={account.id} redirectHref={redirectHref} />
                 </div>
               </div>
             ))}

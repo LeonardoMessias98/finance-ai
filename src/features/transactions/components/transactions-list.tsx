@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { Account } from "@/features/accounts/types/account";
 import type { Category } from "@/features/categories/types/category";
 import { TransactionDeleteButton } from "@/features/transactions/components/transaction-delete-button";
+import { TransactionMetaBadge } from "@/features/transactions/components/transaction-meta-badge";
 import type { Transaction, TransactionType } from "@/features/transactions/types/transaction";
 import { buildTransactionsHref } from "@/features/transactions/utils/build-transactions-href";
 import {
@@ -14,6 +15,8 @@ import {
   formatTransactionCompetencyMonth,
   formatTransactionDate,
   getTransactionStatusLabel,
+  getTransactionTypeAmountClassName,
+  getTransactionTypeDotClassName,
   getTransactionTypeLabel
 } from "@/features/transactions/utils/transaction-formatters";
 import { cn } from "@/lib/utils";
@@ -30,18 +33,6 @@ type TransactionsListProps = {
     type?: TransactionType;
   };
 };
-
-function getTransactionAmountClassName(transactionType: TransactionType): string {
-  if (transactionType === "income") {
-    return "text-income";
-  }
-
-  if (transactionType === "expense") {
-    return "text-destructive";
-  }
-
-  return "text-foreground";
-}
 
 function getStatusBadgeClassName(status: Transaction["status"]): string {
   if (status === "overdue") {
@@ -64,12 +55,16 @@ export function TransactionsList({
 }: TransactionsListProps) {
   const accountById = new Map(accounts.map((account) => [account.id, account]));
   const categoryById = new Map(categories.map((category) => [category.id, category]));
-  const hasAdditionalFilters = Boolean(filters.accountId || filters.categoryId || filters.type);
+  const hasAdditionalFilters = Boolean(filters.accountId || filters.categoryId);
   const redirectHref = buildTransactionsHref(filters);
   const clearSecondaryFiltersHref = buildTransactionsHref({
-    competencyMonth: filters.competencyMonth
+    competencyMonth: filters.competencyMonth,
+    type: filters.type
   });
   const formattedCompetencyMonth = formatTransactionCompetencyMonth(filters.competencyMonth);
+  const emptyStateMessage = filters.type
+    ? `Nenhuma ${getTransactionTypeLabel(filters.type).toLowerCase()} encontrada em ${formattedCompetencyMonth}.`
+    : `Nenhuma transação encontrada em ${formattedCompetencyMonth}. Use o botão Nova transação para registrar o primeiro lançamento.`;
 
   return (
     <Card>
@@ -82,7 +77,7 @@ export function TransactionsList({
             <p className="text-sm text-muted-foreground">
               {hasAdditionalFilters
                 ? `Nenhuma transação encontrada em ${formattedCompetencyMonth} com os filtros atuais.`
-                : `Nenhuma transação encontrada em ${formattedCompetencyMonth}. Use o formulário acima para registrar o primeiro lançamento.`}
+                : emptyStateMessage}
             </p>
             {hasAdditionalFilters ? (
               <Button asChild type="button" variant="outline">
@@ -116,12 +111,8 @@ export function TransactionsList({
                     <div className="flex flex-wrap items-center gap-2">
                       <span
                         className={cn(
-                          "h-2.5 w-2.5 rounded-full",
-                          transaction.type === "income"
-                            ? "bg-income"
-                            : transaction.type === "expense"
-                              ? "bg-destructive"
-                              : "bg-primary"
+                          "inline-block h-2.5 w-2.5 shrink-0 rounded-full",
+                          getTransactionTypeDotClassName(transaction.type)
                         )}
                       />
                       <p className="text-base font-medium text-foreground">{transaction.description}</p>
@@ -137,11 +128,11 @@ export function TransactionsList({
                       {transaction.isRecurring ? <Badge variant="secondary">Recorrente</Badge> : null}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                       <span>{formatTransactionDate(transaction.date)}</span>
-                      <span>{sourceAccount?.name ?? "Conta indisponível"}</span>
-                      {destinationAccount ? <span>{destinationAccount.name}</span> : null}
-                      <span>{category?.name ?? "Sem categoria"}</span>
+                      <TransactionMetaBadge>{sourceAccount?.name ?? "Conta indisponível"}</TransactionMetaBadge>
+                      {destinationAccount ? <TransactionMetaBadge>{destinationAccount.name}</TransactionMetaBadge> : null}
+                      <TransactionMetaBadge tone="category">{category?.name ?? "Sem categoria"}</TransactionMetaBadge>
                     </div>
 
                     {transaction.notes ? <p className="text-sm text-muted-foreground">{transaction.notes}</p> : null}
@@ -149,7 +140,7 @@ export function TransactionsList({
 
                   <div className="flex flex-wrap items-start gap-3 lg:justify-end">
                     <div className="min-w-[9rem] text-right">
-                      <p className={cn("text-lg font-semibold", getTransactionAmountClassName(transaction.type))}>
+                      <p className={cn("text-lg font-semibold", getTransactionTypeAmountClassName(transaction.type))}>
                         {transaction.type === "income" ? "+" : transaction.type === "expense" ? "-" : ""}
                         {formatTransactionAmountFromCents(transaction.amount)}
                       </p>
