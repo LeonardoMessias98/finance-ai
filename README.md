@@ -258,4 +258,21 @@ Estrutura preparada:
 - criação de transação simplificada
 - autenticação por email com sessão única
 - isolamento multiusuário por `userId`
+- suporte PWA com instalação em Android e iOS
 - documentação operacional pronta para outros agentes
+
+## PWA
+
+- a aplicação expõe `manifest.webmanifest`
+- ícones de instalação são servidos pelo App Router
+- o `service worker` é registrado apenas em produção
+- o cache do PWA é restrito a assets estáticos para não misturar conteúdo privado do usuário
+
+Instalação:
+
+- Android: use a opção de instalar app no Chrome ou navegador compatível
+- iOS: use `Compartilhar` → `Adicionar à Tela de Início` no Safari
+
+Observação:
+
+- a instalação exige ambiente HTTPS em produção
