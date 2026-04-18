@@ -25,6 +25,7 @@ export type TransactionInstallment = {
 // Monetary values use the smallest currency unit, such as cents.
 export type Transaction = {
   id: string;
+  userId: string;
   description: string;
   amount: number;
   type: TransactionType;
@@ -41,6 +42,7 @@ export type Transaction = {
 };
 
 export type CreateTransactionInput = {
+  userId: string;
   description: string;
   amount: number;
   type: TransactionType;
@@ -62,6 +64,7 @@ export type UpdateTransactionInput = Omit<CreateTransactionInput, "isRecurring">
 };
 
 export type TransactionFilters = {
+  userId: string;
   competencyMonth?: string;
   accountId?: string;
   categoryId?: string;

@@ -1,5 +1,6 @@
 export type Budget = {
   id: string;
+  userId: string;
   competencyMonth: string;
   categoryId: string;
   limitAmount: number;
@@ -9,6 +10,7 @@ export type Budget = {
 export type BudgetFieldName = "competencyMonth" | "categoryId" | "limitAmount";
 
 export type CreateBudgetInput = {
+  userId: string;
   competencyMonth: string;
   categoryId: string;
   limitAmount: number;
@@ -20,6 +22,7 @@ export type UpdateBudgetInput = CreateBudgetInput & {
 };
 
 export type BudgetFilters = {
+  userId: string;
   competencyMonth?: string;
   categoryId?: string;
 };

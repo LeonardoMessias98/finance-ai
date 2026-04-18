@@ -5,6 +5,7 @@ import type { Budget } from "@/features/budgets/types/budget";
 
 const budget: Budget = {
   id: "budget-1",
+  userId: "user-1",
   competencyMonth: "2026-04",
   categoryId: "category-1",
   limitAmount: 10_000,

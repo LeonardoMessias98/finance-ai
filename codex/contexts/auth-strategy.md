@@ -2,90 +2,97 @@
 
 ## Objetivo
 
-Preparar a base do `finance-ai` para receber autenticacao depois, sem bloquear o MVP atual e sem espalhar acoplamento prematuro.
+Garantir autenticacao simples e isolamento multiusuario sem criar backend separado nem espalhar regra de sessao pelo projeto.
 
-## Recomendacao principal
+## Implementacao atual
 
-Adotar `Auth.js` como solucao principal quando a autenticacao entrar no roadmap.
+O projeto usa autenticacao propria dentro do App Router:
 
-Motivos:
+- login por `email` + `passwordHash`
+- hash `SHA-256` calculado no cliente antes do envio
+- validacao server-side comparando com `passwordHash` salvo no MongoDB
+- `access token` JWT assinado com `AUTH_JWT_SECRET` e expiracao de 1 hora
+- `refresh token` opaco salvo no MongoDB com TTL em `expiresAt`
+- apenas uma sessao ativa por usuario
 
-- encaixa naturalmente no `Next.js` com App Router
-- oferece o helper `auth()` para acesso server-side a sessao
-- permite comecar com sessao `JWT`, o que reduz complexidade inicial
-- pode evoluir depois para adapter e sessoes em banco se o produto precisar
+## Estrutura
 
-Referencias oficiais:
+- `src/features/auth`: schemas, repositories, services, actions e componentes de autenticacao
+- `src/lib/auth/jwt.ts`: emissao e verificacao do JWT
+- `src/lib/auth/session-cookies.ts`: criacao, refresh e revogacao de sessao
+- `src/lib/auth/session.ts`: leitura server-side do usuario autenticado
+- `src/app/api/auth/refresh/route.ts`: renovacao silenciosa da sessao
+- `src/app/login/page.tsx`: tela de login
 
-- `https://authjs.dev/`
-- `https://authjs.dev/reference/nextjs`
-- `https://authjs.dev/concepts/session-strategies`
+## Modelagem
 
-## Leitura do estado atual
+Entidades de autenticacao:
 
-Hoje o projeto ainda nao possui:
+- `users`
+- `refresh_tokens`
 
-- modelo de usuario
-- escopo `userId` nos dominios financeiros
-- protecao de rota
-- middleware/proxy de autenticacao
-- camada de sessao real
+Campos do usuario:
 
-Isso significa que toda a base atual e efetivamente single-tenant no codigo, mesmo rodando em banco compartilhado.
+- `firstName`
+- `lastName`
+- `birthDate`
+- `email`
+- `passwordHash`
+- `lastLoginIp`
+- `lastLoginLocation` opcional
+- `activeSessionId` opcional
+- `createdAt`
+- `updatedAt`
 
-## Menor caminho de evolucao
+Campos do refresh token:
 
-Quando a autenticacao for implementada de fato, o caminho recomendado e:
+- `userId`
+- `sessionId`
+- `tokenHash`
+- `expiresAt`
+- `revokedAt` opcional
+- `createdAt`
 
-1. adicionar `Auth.js`
-2. criar `src/auth.ts` como ponto central de configuracao
-3. expor handlers em `src/app/api/auth/[...nextauth]/route.ts`
-4. adicionar uma pagina propria de login
-5. ligar protecao de rotas via middleware/proxy usando as regras de `src/lib/auth/route-access.ts`
-6. incluir `userId` em `Account`, `Category`, `Transaction`, `Budget` e `Goal`
-7. atualizar repositories para sempre filtrar por `userId`
-8. ajustar seeds para criar dados por usuario, nao globais
+## Isolamento de dados
 
-## Estrategia de sessao recomendada
+Todas as entidades financeiras atuais possuem `userId`:
 
-Fase inicial recomendada:
+- `accounts`
+- `categories`
+- `transactions`
+- `budgets`
+- `goals`
 
-- usar `JWT` session strategy
-- nao persistir sessoes em colecao propria ainda
-- manter o payload de sessao pequeno
-- persistir apenas identificadores e dados minimos do usuario
+Regra obrigatoria:
 
-Justificativa:
+- repositories nunca devem listar, ler, editar ou excluir registros sem filtrar por `userId`
+- services resolvem o usuario autenticado na borda server-side e propagam apenas `userId`
+- repositories nao leem cookie nem sessao diretamente
 
-- o projeto ja usa `Mongoose` para dados de negocio, mas o MVP nao precisa introduzir adapter de autenticacao e modelos extras agora
-- `JWT` reduz custo operacional e atrito de setup
-- a migracao para sessao em banco pode acontecer depois se surgirem requisitos como revogacao imediata, logout global ou multiplas sessoes controladas
+## Regras de sessao
 
-## Preparacao adicionada agora
+- nao existe signup publico
+- login invalida qualquer sessao anterior do mesmo usuario
+- refresh token anterior e revogado ao fazer novo login
+- refresh token expirado pode ser removido automaticamente pelo TTL index
+- logout revoga a sessao ativa e limpa os cookies
 
-Arquivos preparados:
+## Rotas protegidas
 
-- `src/types/auth.ts`: tipos compartilhados de usuario autenticado e entidade com ownership
-- `src/lib/auth/session.ts`: fronteira server-side unica para leitura de sessao futura
-- `src/lib/auth/route-access.ts`: definicao simples das rotas que devem virar protegidas depois
+As rotas financeiras principais exigem autenticacao:
 
-Esses arquivos ainda nao ativam autenticacao. Eles apenas definem os pontos corretos de integracao futura.
+- `/`
+- `/accounts`
+- `/categories`
+- `/transactions`
+- `/budgets`
+- `/goals`
 
-## Regras para a futura implementacao
+`/login` permanece publica.
 
-- nao ler sessao diretamente em repositories
-- resolver autenticacao na borda server-side e propagar apenas `userId`
-- evitar depender de dados amplos da sessao dentro de components
-- tratar dashboard e features financeiras como privadas quando a auth entrar
-- nao adicionar campos de auth aos models financeiros sem incluir filtro correspondente nos repositories
+## Diretrizes para evolucao
 
-## Impacto esperado da futura migracao
-
-As maiores mudancas futuras nao estarao na UI, e sim em:
-
-- models Mongoose com `userId`
-- repositories com filtros obrigatorios por ownership
-- services que hoje assumem base global
-- seed inicial, que precisara operar por usuario
-
-Por isso, a autenticacao deve entrar junto com a primeira rodada de isolamento de dados por usuario, e nao apenas como uma tela de login cosmetica.
+- manter a autenticacao resolvida na borda server-side
+- continuar propagando apenas `userId` para as camadas de dominio
+- se surgir necessidade real de provedores externos ou fluxo mais complexo, reavaliar `Auth.js`
+- nao reintroduzir queries globais em entidades pessoais

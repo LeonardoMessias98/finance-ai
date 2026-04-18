@@ -5,6 +5,7 @@ export type CategoryFieldName = "name" | "type" | "isActive" | "color" | "icon";
 
 export type Category = {
   id: string;
+  userId: string;
   name: string;
   type: CategoryType;
   isActive: boolean;
@@ -13,6 +14,7 @@ export type Category = {
 };
 
 export type CreateCategoryInput = {
+  userId: string;
   name: string;
   type: CategoryType;
   isActive: boolean;
@@ -25,6 +27,7 @@ export type UpdateCategoryInput = CreateCategoryInput & {
 };
 
 export type CategoryFilters = {
+  userId: string;
   type?: CategoryType;
   isActive?: boolean;
 };

@@ -7,10 +7,13 @@ import {
 } from "@/features/categories/repositories/category-repository";
 import { DuplicateCategoryError } from "@/features/categories/services/category-errors";
 import { normalizeCategoryFormValues } from "@/features/categories/utils/normalize-category-form-values";
+import { requireAuthenticatedAppUser } from "@/lib/auth/session";
 
 export async function updateCategory(categoryId: string, values: ParsedCategoryFormValues) {
+  const user = await requireAuthenticatedAppUser();
   const payload = normalizeCategoryFormValues(values);
   const duplicatedCategory = await findCategoryByNameAndType({
+    userId: user.id,
     name: payload.name,
     type: payload.type,
     excludeCategoryId: categoryId
@@ -22,6 +25,7 @@ export async function updateCategory(categoryId: string, values: ParsedCategoryF
 
   return updateCategoryRecord({
     id: categoryId,
+    userId: user.id,
     ...payload
   });
 }

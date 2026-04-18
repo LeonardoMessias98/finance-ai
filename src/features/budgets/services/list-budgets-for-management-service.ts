@@ -4,20 +4,26 @@ import { listCategories } from "@/features/categories/repositories/category-repo
 import { listTransactions } from "@/features/transactions/repositories/transaction-repository";
 import { listBudgets } from "@/features/budgets/repositories/budget-repository";
 import { calculateBudgetListItem } from "@/features/budgets/utils/budget-consumption";
+import { requireAuthenticatedAppUser } from "@/lib/auth/session";
 
 type ListBudgetsForManagementInput = {
   competencyMonth: string;
 };
 
 export async function listBudgetsForManagement(input: ListBudgetsForManagementInput) {
+  const user = await requireAuthenticatedAppUser();
+
   const [budgets, categories, expenseTransactions] = await Promise.all([
     listBudgets({
+      userId: user.id,
       competencyMonth: input.competencyMonth
     }),
     listCategories({
+      userId: user.id,
       type: "expense"
     }),
     listTransactions({
+      userId: user.id,
       competencyMonth: input.competencyMonth,
       type: "expense",
       status: "paid"

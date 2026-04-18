@@ -5,16 +5,18 @@ import {
   deleteTransactionSeries,
   findTransactionById
 } from "@/features/transactions/repositories/transaction-repository";
+import { requireAuthenticatedAppUser } from "@/lib/auth/session";
 
 export async function deleteTransaction(transactionId: string) {
-  const existingTransaction = await findTransactionById(transactionId);
+  const user = await requireAuthenticatedAppUser();
+  const existingTransaction = await findTransactionById(transactionId, user.id);
 
   if (!existingTransaction) {
     return null;
   }
 
   if (existingTransaction.parentTransactionId) {
-    const deletedCount = await deleteTransactionSeries(existingTransaction.parentTransactionId);
+    const deletedCount = await deleteTransactionSeries(existingTransaction.parentTransactionId, user.id);
 
     return {
       deletedTransaction: existingTransaction,
@@ -22,7 +24,7 @@ export async function deleteTransaction(transactionId: string) {
     };
   }
 
-  const deletedTransaction = await deleteTransactionRecord(transactionId);
+  const deletedTransaction = await deleteTransactionRecord(transactionId, user.id);
 
   if (!deletedTransaction) {
     return null;

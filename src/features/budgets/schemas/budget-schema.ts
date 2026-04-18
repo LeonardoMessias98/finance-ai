@@ -19,6 +19,7 @@ const alertThresholdsSchema = z
   .optional();
 
 export const createBudgetSchema = z.object({
+  userId: objectIdStringSchema,
   competencyMonth: z.string().regex(competencyMonthRegex, "Competency month must be formatted as YYYY-MM."),
   categoryId: objectIdStringSchema,
   limitAmount: z.number().int().positive(),

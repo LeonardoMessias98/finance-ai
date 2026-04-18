@@ -14,7 +14,10 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:install": "playwright install",
-    "seed": "node --import tsx ./scripts/seed-initial.ts"
+    "seed": "node --import tsx ./scripts/seed-initial.ts",
+    "seed:reset": "node --import tsx ./scripts/seed-initial.ts --reset",
+    "reset:admin": "node --import tsx ./scripts/reset-admin.ts",
+    "user:create": "node --import tsx ./scripts/create-user.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.0.1",

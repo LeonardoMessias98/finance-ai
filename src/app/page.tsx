@@ -1,5 +1,8 @@
+import { redirect } from "next/navigation";
+
 import { DashboardPage } from "@/features/dashboard/components/dashboard-page";
 import { transactionTypeValues, type TransactionType } from "@/features/transactions/types/transaction";
+import { getOptionalAuthenticatedAppUser } from "@/lib/auth/session";
 import { getCurrentCompetencyMonth, isCompetencyMonth } from "@/lib/dates/competency-month";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +19,12 @@ function isTransactionType(value: string): value is TransactionType {
 }
 
 export default async function HomePage({ searchParams }: HomePageProps) {
+  const user = await getOptionalAuthenticatedAppUser();
+
+  if (!user) {
+    redirect("/login?next=/");
+  }
+
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const competencyMonth =
     typeof resolvedSearchParams.competencyMonth === "string" && isCompetencyMonth(resolvedSearchParams.competencyMonth)

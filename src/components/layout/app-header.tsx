@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { Button } from "@/components/ui/button";
+import { LogoutButton } from "@/features/auth/components/logout-button";
 import { getCurrentCompetencyMonth } from "@/lib/dates/competency-month";
 
 const navigationLinks = [
@@ -61,6 +62,8 @@ export function AppHeader() {
         <Button asChild className="shrink-0 px-3 sm:px-4">
           <Link href={`/transactions?competencyMonth=${currentCompetencyMonth}`}>Nova transação</Link>
         </Button>
+
+        <LogoutButton />
       </div>
     </header>
   );

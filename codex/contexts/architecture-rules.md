@@ -23,3 +23,8 @@
 - a conexão precisa ser reutilizada entre renders no ambiente Next.js
 - os models Mongoose devem ficar em `src/lib/db/models`
 - novas features devem adicionar apenas as camadas realmente necessárias
+- autenticação deve ser resolvida na borda server-side e propagar apenas `userId` para o domínio
+- tokens de sessão devem ficar em cookies `httpOnly` quando aplicável
+- rotas privadas devem ser protegidas por `middleware` e validadas novamente no servidor
+- repositories nunca devem acessar sessão diretamente
+- collections com dado pessoal devem ter filtro obrigatório por `userId`

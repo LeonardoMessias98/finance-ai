@@ -1,4 +1,7 @@
+import { redirect } from "next/navigation";
+
 import { BudgetsPage } from "@/features/budgets/components/budgets-page";
+import { getOptionalAuthenticatedAppUser } from "@/lib/auth/session";
 import { getCurrentCompetencyMonth, isCompetencyMonth } from "@/lib/dates/competency-month";
 
 type BudgetsRoutePageProps = {
@@ -9,6 +12,12 @@ type BudgetsRoutePageProps = {
 };
 
 export default async function BudgetsRoutePage({ searchParams }: BudgetsRoutePageProps) {
+  const user = await getOptionalAuthenticatedAppUser();
+
+  if (!user) {
+    redirect("/login?next=/budgets");
+  }
+
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const editingBudgetId =
     typeof resolvedSearchParams.budgetId === "string" ? resolvedSearchParams.budgetId : undefined;

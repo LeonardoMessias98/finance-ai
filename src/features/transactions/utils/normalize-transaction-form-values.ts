@@ -20,7 +20,7 @@ function parseDateInput(value: string): Date {
 
 export function normalizeTransactionFormValues(
   values: ParsedTransactionFormValues
-): CreateTransactionInput & { isRecurring: boolean } {
+): Omit<CreateTransactionInput, "userId"> & { isRecurring: boolean } {
   const parsedDate = parseDateInput(values.date);
   const normalizedCompetencyMonth = isCompetencyMonth(values.competencyMonth)
     ? values.competencyMonth

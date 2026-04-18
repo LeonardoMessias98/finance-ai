@@ -1,8 +1,9 @@
-import { type Model, Schema, model, models } from "mongoose";
+import { type Model, Schema, type Types, model, models } from "mongoose";
 
 import { categoryTypeValues, type CategoryType } from "@/features/categories/types/category";
 
 export type CategoryDocument = {
+  userId: Types.ObjectId;
   name: string;
   type: CategoryType;
   isActive: boolean;
@@ -12,6 +13,11 @@ export type CategoryDocument = {
 
 const categorySchema = new Schema<CategoryDocument>(
   {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
     name: {
       type: String,
       required: true,
@@ -46,6 +52,7 @@ const categorySchema = new Schema<CategoryDocument>(
 );
 
 categorySchema.index({
+  userId: 1,
   type: 1,
   isActive: 1,
   name: 1
@@ -53,6 +60,7 @@ categorySchema.index({
 
 categorySchema.index(
   {
+    userId: 1,
     type: 1,
     name: 1
   },

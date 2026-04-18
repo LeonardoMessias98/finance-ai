@@ -1,7 +1,7 @@
 import "server-only";
 
-import { findAccountById } from "@/features/accounts/repositories/account-repository";
-import { findCategoryById } from "@/features/categories/repositories/category-repository";
+import { findAccountByIdForUser } from "@/features/accounts/repositories/account-repository";
+import { findCategoryByIdForUser } from "@/features/categories/repositories/category-repository";
 import { getCategoryTypeLabel } from "@/features/categories/utils/category-formatters";
 import { createTransactionFieldError } from "@/features/transactions/services/transaction-errors";
 import type { UpdateTransactionInput } from "@/features/transactions/types/transaction";
@@ -11,11 +11,11 @@ type TransactionRelationInput = Pick<
   "type" | "accountId" | "destinationAccountId" | "categoryId"
 >;
 
-export async function assertTransactionRelations(input: TransactionRelationInput): Promise<void> {
+export async function assertTransactionRelations(input: TransactionRelationInput, userId: string): Promise<void> {
   const [sourceAccount, destinationAccount, category] = await Promise.all([
-    findAccountById(input.accountId),
-    input.destinationAccountId ? findAccountById(input.destinationAccountId) : Promise.resolve(null),
-    input.categoryId ? findCategoryById(input.categoryId) : Promise.resolve(null)
+    findAccountByIdForUser(input.accountId, userId),
+    input.destinationAccountId ? findAccountByIdForUser(input.destinationAccountId, userId) : Promise.resolve(null),
+    input.categoryId ? findCategoryByIdForUser(input.categoryId, userId) : Promise.resolve(null)
   ]);
 
   if (!sourceAccount) {

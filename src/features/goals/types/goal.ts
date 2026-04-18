@@ -1,5 +1,6 @@
 export type Goal = {
   id: string;
+  userId: string;
   name: string;
   targetAmount: number;
   currentAmount: number;
@@ -10,6 +11,7 @@ export type Goal = {
 export type GoalFieldName = "name" | "targetAmount" | "currentAmount" | "targetDate";
 
 export type CreateGoalInput = {
+  userId: string;
   name: string;
   targetAmount: number;
   currentAmount?: number;
@@ -22,6 +24,7 @@ export type UpdateGoalInput = CreateGoalInput & {
 };
 
 export type GoalFilters = {
+  userId: string;
   isCompleted?: boolean;
 };
 

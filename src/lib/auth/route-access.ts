@@ -1,23 +1,27 @@
-const futureProtectedRoutePrefixes = ["/accounts", "/budgets", "/categories", "/goals", "/transactions"] as const;
-const futureAuthenticationRoutePrefixes = ["/login"] as const;
+const protectedRoutePrefixes = ["/", "/accounts", "/budgets", "/categories", "/goals", "/transactions"] as const;
+const authenticationRoutePrefixes = ["/login"] as const;
 
 function matchesRoutePrefix(pathname: string, routePrefix: string): boolean {
   return pathname === routePrefix || pathname.startsWith(`${routePrefix}/`);
 }
 
-export function isFutureProtectedRoute(pathname: string): boolean {
-  return futureProtectedRoutePrefixes.some((routePrefix) => matchesRoutePrefix(pathname, routePrefix));
+export function isProtectedRoute(pathname: string): boolean {
+  return protectedRoutePrefixes.some((routePrefix) => matchesRoutePrefix(pathname, routePrefix));
 }
 
-export function isFutureAuthenticationRoute(pathname: string): boolean {
-  return futureAuthenticationRoutePrefixes.some((routePrefix) => matchesRoutePrefix(pathname, routePrefix));
+export function isAuthenticationRoute(pathname: string): boolean {
+  return authenticationRoutePrefixes.some((routePrefix) => matchesRoutePrefix(pathname, routePrefix));
 }
 
 export function isPublicRoute(pathname: string): boolean {
-  return !isFutureProtectedRoute(pathname);
+  return !isProtectedRoute(pathname);
 }
 
-export const authPreparationRoutes = {
-  futureAuthenticationRoutePrefixes,
-  futureProtectedRoutePrefixes
+export const authRoutes = {
+  authenticationRoutePrefixes,
+  protectedRoutePrefixes
 } as const;
+
+export const isFutureProtectedRoute = isProtectedRoute;
+export const isFutureAuthenticationRoute = isAuthenticationRoute;
+export const authPreparationRoutes = authRoutes;

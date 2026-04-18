@@ -11,7 +11,7 @@ function parseDateInput(value: string | undefined): Date | undefined {
   return new Date(Date.UTC(year, month - 1, day, 12));
 }
 
-export function normalizeGoalFormValues(values: ParsedGoalFormValues): CreateGoalInput {
+export function normalizeGoalFormValues(values: ParsedGoalFormValues): Omit<CreateGoalInput, "userId"> {
   return {
     name: values.name.trim(),
     targetAmount: Math.round(values.targetAmount * 100),

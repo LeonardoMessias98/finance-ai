@@ -1,6 +1,7 @@
-import { type HydratedDocument, type Model, Schema, model, models } from "mongoose";
+import { type HydratedDocument, type Model, Schema, type Types, model, models } from "mongoose";
 
 export type GoalDocument = {
+  userId: Types.ObjectId;
   name: string;
   targetAmount: number;
   currentAmount: number;
@@ -10,6 +11,11 @@ export type GoalDocument = {
 
 const goalSchema = new Schema<GoalDocument>(
   {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
     name: {
       type: String,
       required: true,
@@ -51,11 +57,13 @@ goalSchema.pre("validate", function validateGoal(next) {
 });
 
 goalSchema.index({
+  userId: 1,
   isCompleted: 1,
   targetDate: 1
 });
 
 goalSchema.index({
+  userId: 1,
   name: 1
 });
 

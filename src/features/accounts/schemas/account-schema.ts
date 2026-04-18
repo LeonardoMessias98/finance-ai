@@ -18,6 +18,7 @@ const optionalAccountColorSchema = z.preprocess(emptyStringToUndefined, accountC
 const optionalAccountIconSchema = z.preprocess(emptyStringToUndefined, accountIconSchema.optional());
 
 const accountMutationFieldsSchema = z.object({
+  userId: objectIdStringSchema,
   name: z.string().trim().min(1, "Informe o nome da conta.").max(80, "Use no máximo 80 caracteres."),
   type: z.enum(accountTypeValues, {
     errorMap: () => ({

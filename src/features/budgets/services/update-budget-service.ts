@@ -6,12 +6,14 @@ import {
   findBudgetById,
   updateBudget as updateBudgetRecord
 } from "@/features/budgets/repositories/budget-repository";
-import { findCategoryById } from "@/features/categories/repositories/category-repository";
+import { findCategoryByIdForUser } from "@/features/categories/repositories/category-repository";
 import { DuplicateBudgetError, InvalidBudgetCategoryError } from "@/features/budgets/services/budget-errors";
 import { normalizeBudgetFormValues } from "@/features/budgets/utils/normalize-budget-form-values";
+import { requireAuthenticatedAppUser } from "@/lib/auth/session";
 
 export async function updateBudget(budgetId: string, values: ParsedBudgetFormValues) {
-  const existingBudget = await findBudgetById(budgetId);
+  const user = await requireAuthenticatedAppUser();
+  const existingBudget = await findBudgetById(budgetId, user.id);
 
   if (!existingBudget) {
     return null;
@@ -19,8 +21,9 @@ export async function updateBudget(budgetId: string, values: ParsedBudgetFormVal
 
   const normalizedValues = normalizeBudgetFormValues(values);
   const [category, duplicatedBudget] = await Promise.all([
-    findCategoryById(normalizedValues.categoryId),
+    findCategoryByIdForUser(normalizedValues.categoryId, user.id),
     findBudgetByCategoryAndMonth({
+      userId: user.id,
       categoryId: normalizedValues.categoryId,
       competencyMonth: normalizedValues.competencyMonth,
       excludeBudgetId: budgetId
@@ -37,6 +40,7 @@ export async function updateBudget(budgetId: string, values: ParsedBudgetFormVal
 
   return updateBudgetRecord({
     id: budgetId,
+    userId: user.id,
     competencyMonth: normalizedValues.competencyMonth,
     categoryId: normalizedValues.categoryId,
     limitAmount: normalizedValues.limitAmount,

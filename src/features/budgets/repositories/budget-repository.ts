@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { FilterQuery, HydratedDocument } from "mongoose";
+import { Types } from "mongoose";
 
 import { createBudgetSchema, updateBudgetSchema } from "@/features/budgets/schemas/budget-schema";
 import type { Budget, BudgetFilters, CreateBudgetInput, UpdateBudgetInput } from "@/features/budgets/types/budget";
@@ -11,6 +12,7 @@ import { type BudgetDocument, BudgetModel } from "@/lib/db/models/budget-model";
 function mapBudgetDocument(document: HydratedDocument<BudgetDocument>): Budget {
   return {
     id: document._id.toString(),
+    userId: document.userId.toString(),
     competencyMonth: document.competencyMonth,
     categoryId: document.categoryId.toString(),
     limitAmount: document.limitAmount,
@@ -23,7 +25,13 @@ export async function createBudget(input: CreateBudgetInput): Promise<Budget> {
 
   await connectToDatabase();
 
-  const document = await BudgetModel.create(payload);
+  // Ensure userId is converted to ObjectId for Mongoose
+  const documentData = {
+    ...payload,
+    userId: new Types.ObjectId(payload.userId)
+  };
+
+  const document = await BudgetModel.create(documentData);
 
   return mapBudgetDocument(document);
 }
@@ -33,8 +41,11 @@ export async function updateBudget(input: UpdateBudgetInput): Promise<Budget | n
 
   await connectToDatabase();
 
-  const document = await BudgetModel.findByIdAndUpdate(
-    payload.id,
+  const document = await BudgetModel.findOneAndUpdate(
+    {
+      _id: payload.id,
+      userId: payload.userId
+    },
     {
       competencyMonth: payload.competencyMonth,
       categoryId: payload.categoryId,
@@ -50,22 +61,27 @@ export async function updateBudget(input: UpdateBudgetInput): Promise<Budget | n
   return document ? mapBudgetDocument(document) : null;
 }
 
-export async function findBudgetById(budgetId: string): Promise<Budget | null> {
-  if (!isObjectIdString(budgetId)) {
+export async function findBudgetById(budgetId: string, userId: string): Promise<Budget | null> {
+  if (!isObjectIdString(budgetId) || !isObjectIdString(userId)) {
     return null;
   }
 
   await connectToDatabase();
 
-  const document = await BudgetModel.findById(budgetId).exec();
+  const document = await BudgetModel.findOne({
+    _id: budgetId,
+    userId
+  }).exec();
 
   return document ? mapBudgetDocument(document) : null;
 }
 
-export async function listBudgets(filters: BudgetFilters = {}): Promise<Budget[]> {
+export async function listBudgets(filters: BudgetFilters): Promise<Budget[]> {
   await connectToDatabase();
 
-  const query: FilterQuery<BudgetDocument> = {};
+  const query: FilterQuery<BudgetDocument> = {
+    userId: filters.userId
+  };
 
   if (filters.competencyMonth) {
     query.competencyMonth = filters.competencyMonth;
@@ -90,17 +106,19 @@ export async function listBudgets(filters: BudgetFilters = {}): Promise<Budget[]
 }
 
 export async function findBudgetByCategoryAndMonth(input: {
+  userId: string;
   categoryId: string;
   competencyMonth: string;
   excludeBudgetId?: string;
 }): Promise<Budget | null> {
-  if (!isObjectIdString(input.categoryId)) {
+  if (!isObjectIdString(input.categoryId) || !isObjectIdString(input.userId)) {
     return null;
   }
 
   await connectToDatabase();
 
   const query: FilterQuery<BudgetDocument> = {
+    userId: input.userId,
     categoryId: input.categoryId,
     competencyMonth: input.competencyMonth
   };

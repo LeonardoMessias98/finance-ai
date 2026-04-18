@@ -6,6 +6,7 @@ export type AccountFieldName = "name" | "type" | "initialBalance" | "isActive" |
 // Monetary values use the smallest currency unit, such as cents.
 export type Account = {
   id: string;
+  userId: string;
   name: string;
   type: AccountType;
   initialBalance: number;
@@ -15,6 +16,7 @@ export type Account = {
 };
 
 export type CreateAccountInput = {
+  userId: string;
   name: string;
   type: AccountType;
   initialBalance: number;
@@ -28,6 +30,7 @@ export type UpdateAccountInput = CreateAccountInput & {
 };
 
 export type AccountFilters = {
+  userId: string;
   type?: AccountType;
   isActive?: boolean;
 };

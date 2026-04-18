@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { FilterQuery, HydratedDocument } from "mongoose";
+import { Types } from "mongoose";
 
 import { createAccountSchema, updateAccountSchema } from "@/features/accounts/schemas/account-schema";
 import type { Account, AccountFilters, CreateAccountInput, UpdateAccountInput } from "@/features/accounts/types/account";
@@ -12,6 +13,7 @@ import { TransactionModel } from "@/lib/db/models/transaction-model";
 function mapAccountDocument(document: HydratedDocument<AccountDocument>): Account {
   return {
     id: document._id.toString(),
+    userId: document.userId.toString(),
     name: document.name,
     type: document.type,
     initialBalance: document.initialBalance,
@@ -26,7 +28,13 @@ export async function createAccount(input: CreateAccountInput): Promise<Account>
 
   await connectToDatabase();
 
-  const document = await AccountModel.create(payload);
+  // Ensure userId is converted to ObjectId for Mongoose
+  const documentData = {
+    ...payload,
+    userId: new Types.ObjectId(payload.userId)
+  };
+
+  const document = await AccountModel.create(documentData);
 
   return mapAccountDocument(document);
 }
@@ -36,8 +44,11 @@ export async function updateAccount(input: UpdateAccountInput): Promise<Account 
 
   await connectToDatabase();
 
-  const document = await AccountModel.findByIdAndUpdate(
-    payload.id,
+  const document = await AccountModel.findOneAndUpdate(
+    {
+      _id: payload.id,
+      userId: payload.userId
+    },
     {
       name: payload.name,
       type: payload.type,
@@ -55,22 +66,27 @@ export async function updateAccount(input: UpdateAccountInput): Promise<Account 
   return document ? mapAccountDocument(document) : null;
 }
 
-export async function findAccountById(accountId: string): Promise<Account | null> {
-  if (!isObjectIdString(accountId)) {
+export async function findAccountByIdForUser(accountId: string, userId: string): Promise<Account | null> {
+  if (!isObjectIdString(accountId) || !isObjectIdString(userId)) {
     return null;
   }
 
   await connectToDatabase();
 
-  const document = await AccountModel.findById(accountId).exec();
+  const document = await AccountModel.findOne({
+    _id: accountId,
+    userId
+  }).exec();
 
   return document ? mapAccountDocument(document) : null;
 }
 
-export async function listAccounts(filters: AccountFilters = {}): Promise<Account[]> {
+export async function listAccounts(filters: AccountFilters): Promise<Account[]> {
   await connectToDatabase();
 
-  const query: FilterQuery<AccountDocument> = {};
+  const query: FilterQuery<AccountDocument> = {
+    userId: filters.userId
+  };
 
   if (filters.type) {
     query.type = filters.type;
@@ -90,15 +106,18 @@ export async function listAccounts(filters: AccountFilters = {}): Promise<Accoun
   return documents.map(mapAccountDocument);
 }
 
-export async function setAccountActiveState(accountId: string, isActive: boolean): Promise<Account | null> {
-  if (!isObjectIdString(accountId)) {
+export async function setAccountActiveState(accountId: string, userId: string, isActive: boolean): Promise<Account | null> {
+  if (!isObjectIdString(accountId) || !isObjectIdString(userId)) {
     return null;
   }
 
   await connectToDatabase();
 
-  const document = await AccountModel.findByIdAndUpdate(
-    accountId,
+  const document = await AccountModel.findOneAndUpdate(
+    {
+      _id: accountId,
+      userId
+    },
     {
       isActive
     },
@@ -111,14 +130,15 @@ export async function setAccountActiveState(accountId: string, isActive: boolean
   return document ? mapAccountDocument(document) : null;
 }
 
-export async function countTransactionsByAccountId(accountId: string): Promise<number> {
-  if (!isObjectIdString(accountId)) {
+export async function countTransactionsByAccountId(accountId: string, userId: string): Promise<number> {
+  if (!isObjectIdString(accountId) || !isObjectIdString(userId)) {
     return 0;
   }
 
   await connectToDatabase();
 
   return TransactionModel.countDocuments({
+    userId,
     $or: [
       {
         accountId
@@ -130,14 +150,17 @@ export async function countTransactionsByAccountId(accountId: string): Promise<n
   }).exec();
 }
 
-export async function deleteAccount(accountId: string): Promise<Account | null> {
-  if (!isObjectIdString(accountId)) {
+export async function deleteAccount(accountId: string, userId: string): Promise<Account | null> {
+  if (!isObjectIdString(accountId) || !isObjectIdString(userId)) {
     return null;
   }
 
   await connectToDatabase();
 
-  const document = await AccountModel.findByIdAndDelete(accountId).exec();
+  const document = await AccountModel.findOneAndDelete({
+    _id: accountId,
+    userId
+  }).exec();
 
   return document ? mapAccountDocument(document) : null;
 }

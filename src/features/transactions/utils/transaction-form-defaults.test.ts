@@ -11,6 +11,7 @@ import {
 const accounts: Account[] = [
   {
     id: "507f1f77bcf86cd799439011",
+    userId: "user-1",
     name: "Carteira",
     type: "cash",
     initialBalance: 0,
@@ -18,6 +19,7 @@ const accounts: Account[] = [
   },
   {
     id: "507f1f77bcf86cd799439012",
+    userId: "user-1",
     name: "Conta corrente",
     type: "checking",
     initialBalance: 0,
@@ -33,6 +35,7 @@ describe("transaction-form-defaults", () => {
   it("keeps the existing transaction data when editing", () => {
     const transaction: Transaction = {
       id: "507f1f77bcf86cd799439099",
+      userId: "user-1",
       description: "Salario",
       amount: 425000,
       type: "income",

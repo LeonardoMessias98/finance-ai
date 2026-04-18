@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { FilterQuery, HydratedDocument } from "mongoose";
+import { Types } from "mongoose";
 
 import { createGoalSchema, updateGoalSchema } from "@/features/goals/schemas/goal-schema";
 import type { CreateGoalInput, Goal, GoalFilters, UpdateGoalInput } from "@/features/goals/types/goal";
@@ -11,6 +12,7 @@ import { type GoalDocument, GoalModel } from "@/lib/db/models/goal-model";
 function mapGoalDocument(document: HydratedDocument<GoalDocument>): Goal {
   return {
     id: document._id.toString(),
+    userId: document.userId.toString(),
     name: document.name,
     targetAmount: document.targetAmount,
     currentAmount: document.currentAmount,
@@ -24,7 +26,13 @@ export async function createGoal(input: CreateGoalInput): Promise<Goal> {
 
   await connectToDatabase();
 
-  const document = await GoalModel.create(payload);
+  // Ensure userId is converted to ObjectId for Mongoose
+  const documentData = {
+    ...payload,
+    userId: new Types.ObjectId(payload.userId)
+  };
+
+  const document = await GoalModel.create(documentData);
 
   return mapGoalDocument(document);
 }
@@ -34,8 +42,11 @@ export async function updateGoal(input: UpdateGoalInput): Promise<Goal | null> {
 
   await connectToDatabase();
 
-  const document = await GoalModel.findByIdAndUpdate(
-    payload.id,
+  const document = await GoalModel.findOneAndUpdate(
+    {
+      _id: payload.id,
+      userId: payload.userId
+    },
     {
       name: payload.name,
       targetAmount: payload.targetAmount,
@@ -52,22 +63,27 @@ export async function updateGoal(input: UpdateGoalInput): Promise<Goal | null> {
   return document ? mapGoalDocument(document) : null;
 }
 
-export async function findGoalById(goalId: string): Promise<Goal | null> {
-  if (!isObjectIdString(goalId)) {
+export async function findGoalById(goalId: string, userId: string): Promise<Goal | null> {
+  if (!isObjectIdString(goalId) || !isObjectIdString(userId)) {
     return null;
   }
 
   await connectToDatabase();
 
-  const document = await GoalModel.findById(goalId).exec();
+  const document = await GoalModel.findOne({
+    _id: goalId,
+    userId
+  }).exec();
 
   return document ? mapGoalDocument(document) : null;
 }
 
-export async function listGoals(filters: GoalFilters = {}): Promise<Goal[]> {
+export async function listGoals(filters: GoalFilters): Promise<Goal[]> {
   await connectToDatabase();
 
-  const query: FilterQuery<GoalDocument> = {};
+  const query: FilterQuery<GoalDocument> = {
+    userId: filters.userId
+  };
 
   if (typeof filters.isCompleted === "boolean") {
     query.isCompleted = filters.isCompleted;

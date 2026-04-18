@@ -11,7 +11,7 @@ function normalizeOptionalValue(value: string | undefined): string | undefined {
   return trimmedValue.length > 0 ? trimmedValue : undefined;
 }
 
-export function normalizeAccountFormValues(values: ParsedAccountFormValues): CreateAccountInput {
+export function normalizeAccountFormValues(values: ParsedAccountFormValues): Omit<CreateAccountInput, "userId"> {
   return {
     name: values.name.trim(),
     type: values.type,

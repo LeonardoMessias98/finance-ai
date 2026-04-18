@@ -45,7 +45,7 @@ export const initialAccountSeedData = [
     color: "#166534",
     icon: "chart-column"
   }
-] as const satisfies readonly CreateAccountInput[];
+] as const satisfies readonly Omit<CreateAccountInput, "userId">[];
 
 export const initialCategorySeedData = [
   {
@@ -139,7 +139,7 @@ export const initialCategorySeedData = [
     color: "#0f766e",
     icon: "arrow-right-left"
   }
-] as const satisfies readonly CreateCategoryInput[];
+] as const satisfies readonly Omit<CreateCategoryInput, "userId">[];
 
 export type OptionalSampleSeedContext = {
   checkingAccountId: string;
@@ -150,9 +150,9 @@ export type OptionalSampleSeedContext = {
 };
 
 export type OptionalSampleSeedData = {
-  transactions: CreateTransactionInput[];
-  budgets: CreateBudgetInput[];
-  goals: CreateGoalInput[];
+  transactions: Omit<CreateTransactionInput, "userId">[];
+  budgets: Omit<CreateBudgetInput, "userId">[];
+  goals: Omit<CreateGoalInput, "userId">[];
 };
 
 function buildUtcDate(year: number, month: number, day: number): Date {

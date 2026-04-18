@@ -20,6 +20,7 @@ function isValidDateInput(value: string): boolean {
 }
 
 const goalMutationFieldsSchema = z.object({
+  userId: objectIdStringSchema,
   name: z.string().trim().min(1, "Informe o nome da meta.").max(80, "Use no máximo 80 caracteres."),
   targetAmount: z.number().int().positive(),
   currentAmount: z.number().int().min(0).default(0),

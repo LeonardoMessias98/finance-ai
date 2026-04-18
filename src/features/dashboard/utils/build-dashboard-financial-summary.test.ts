@@ -8,6 +8,7 @@ import type { Transaction } from "@/features/transactions/types/transaction";
 const accounts: Account[] = [
   {
     id: "account-1",
+    userId: "user-1",
     name: "Conta principal",
     type: "checking",
     initialBalance: 10_000,
@@ -15,6 +16,7 @@ const accounts: Account[] = [
   },
   {
     id: "account-2",
+    userId: "user-1",
     name: "Reserva",
     type: "savings",
     initialBalance: 5_000,
@@ -25,12 +27,14 @@ const accounts: Account[] = [
 const categories: Category[] = [
   {
     id: "category-income",
+    userId: "user-1",
     name: "Salário",
     type: "income",
     isActive: true
   },
   {
     id: "category-expense",
+    userId: "user-1",
     name: "Mercado",
     type: "expense",
     isActive: true
@@ -40,6 +44,7 @@ const categories: Category[] = [
 const transactions: Transaction[] = [
   {
     id: "transaction-1",
+    userId: "user-1",
     description: "Salário abril",
     amount: 3_000,
     type: "income",
@@ -52,6 +57,7 @@ const transactions: Transaction[] = [
   },
   {
     id: "transaction-2",
+    userId: "user-1",
     description: "Mercado abril",
     amount: 1_000,
     type: "expense",
@@ -64,6 +70,7 @@ const transactions: Transaction[] = [
   },
   {
     id: "transaction-3",
+    userId: "user-1",
     description: "Transferência para reserva",
     amount: 2_000,
     type: "transfer",
@@ -76,6 +83,7 @@ const transactions: Transaction[] = [
   },
   {
     id: "transaction-4",
+    userId: "user-1",
     description: "Mercado planejado",
     amount: 700,
     type: "expense",
@@ -88,6 +96,7 @@ const transactions: Transaction[] = [
   },
   {
     id: "transaction-5",
+    userId: "user-1",
     description: "Mercado março",
     amount: 500,
     type: "expense",

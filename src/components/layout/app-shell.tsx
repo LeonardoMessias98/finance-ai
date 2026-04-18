@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 
+import { SessionKeepAlive } from "@/features/auth/components/session-keep-alive";
 import { AppHeader } from "@/components/layout/app-header";
 
 type AppShellProps = {
@@ -9,6 +10,7 @@ type AppShellProps = {
 export function AppShell({ children }: AppShellProps) {
   return (
     <div className="min-h-screen">
+      <SessionKeepAlive />
       <AppHeader />
       <main className="pb-12 pt-10 sm:pt-12">
         <div className="mx-auto max-w-5xl px-4 sm:px-6">{children}</div>

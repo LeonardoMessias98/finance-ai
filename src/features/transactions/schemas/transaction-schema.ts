@@ -43,6 +43,7 @@ const installmentSchema = z
   });
 
 const transactionFieldsSchema = z.object({
+  userId: objectIdStringSchema,
   description: z
     .string()
     .trim()

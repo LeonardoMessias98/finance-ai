@@ -1,6 +1,7 @@
 import "server-only";
 
 import type { FilterQuery, HydratedDocument } from "mongoose";
+import { Types } from "mongoose";
 
 import { createCategorySchema, updateCategorySchema } from "@/features/categories/schemas/category-schema";
 import type {
@@ -18,6 +19,7 @@ import { TransactionModel } from "@/lib/db/models/transaction-model";
 function mapCategoryDocument(document: HydratedDocument<CategoryDocument>): Category {
   return {
     id: document._id.toString(),
+    userId: document.userId.toString(),
     name: document.name,
     type: document.type,
     isActive: document.isActive,
@@ -31,7 +33,13 @@ export async function createCategory(input: CreateCategoryInput): Promise<Catego
 
   await connectToDatabase();
 
-  const document = await CategoryModel.create(payload);
+  // Ensure userId is converted to ObjectId for Mongoose
+  const documentData = {
+    ...payload,
+    userId: new Types.ObjectId(payload.userId)
+  };
+
+  const document = await CategoryModel.create(documentData);
 
   return mapCategoryDocument(document);
 }
@@ -41,8 +49,11 @@ export async function updateCategory(input: UpdateCategoryInput): Promise<Catego
 
   await connectToDatabase();
 
-  const document = await CategoryModel.findByIdAndUpdate(
-    payload.id,
+  const document = await CategoryModel.findOneAndUpdate(
+    {
+      _id: payload.id,
+      userId: payload.userId
+    },
     {
       name: payload.name,
       type: payload.type,
@@ -59,22 +70,27 @@ export async function updateCategory(input: UpdateCategoryInput): Promise<Catego
   return document ? mapCategoryDocument(document) : null;
 }
 
-export async function findCategoryById(categoryId: string): Promise<Category | null> {
-  if (!isObjectIdString(categoryId)) {
+export async function findCategoryByIdForUser(categoryId: string, userId: string): Promise<Category | null> {
+  if (!isObjectIdString(categoryId) || !isObjectIdString(userId)) {
     return null;
   }
 
   await connectToDatabase();
 
-  const document = await CategoryModel.findById(categoryId).exec();
+  const document = await CategoryModel.findOne({
+    _id: categoryId,
+    userId
+  }).exec();
 
   return document ? mapCategoryDocument(document) : null;
 }
 
-export async function listCategories(filters: CategoryFilters = {}): Promise<Category[]> {
+export async function listCategories(filters: CategoryFilters): Promise<Category[]> {
   await connectToDatabase();
 
-  const query: FilterQuery<CategoryDocument> = {};
+  const query: FilterQuery<CategoryDocument> = {
+    userId: filters.userId
+  };
 
   if (filters.type) {
     query.type = filters.type;
@@ -94,15 +110,22 @@ export async function listCategories(filters: CategoryFilters = {}): Promise<Cat
   return documents.map(mapCategoryDocument);
 }
 
-export async function setCategoryActiveState(categoryId: string, isActive: boolean): Promise<Category | null> {
-  if (!isObjectIdString(categoryId)) {
+export async function setCategoryActiveState(
+  categoryId: string,
+  userId: string,
+  isActive: boolean
+): Promise<Category | null> {
+  if (!isObjectIdString(categoryId) || !isObjectIdString(userId)) {
     return null;
   }
 
   await connectToDatabase();
 
-  const document = await CategoryModel.findByIdAndUpdate(
-    categoryId,
+  const document = await CategoryModel.findOneAndUpdate(
+    {
+      _id: categoryId,
+      userId
+    },
     {
       isActive
     },
@@ -116,6 +139,7 @@ export async function setCategoryActiveState(categoryId: string, isActive: boole
 }
 
 export async function findCategoryByNameAndType(input: {
+  userId: string;
   name: string;
   type: CategoryType;
   excludeCategoryId?: string;
@@ -123,6 +147,7 @@ export async function findCategoryByNameAndType(input: {
   await connectToDatabase();
 
   const query: FilterQuery<CategoryDocument> = {
+    userId: input.userId,
     type: input.type,
     name: input.name.trim()
   };
@@ -141,26 +166,30 @@ export async function findCategoryByNameAndType(input: {
   return document ? mapCategoryDocument(document) : null;
 }
 
-export async function countTransactionsByCategoryId(categoryId: string): Promise<number> {
-  if (!isObjectIdString(categoryId)) {
+export async function countTransactionsByCategoryId(categoryId: string, userId: string): Promise<number> {
+  if (!isObjectIdString(categoryId) || !isObjectIdString(userId)) {
     return 0;
   }
 
   await connectToDatabase();
 
   return TransactionModel.countDocuments({
+    userId,
     categoryId
   }).exec();
 }
 
-export async function deleteCategory(categoryId: string): Promise<Category | null> {
-  if (!isObjectIdString(categoryId)) {
+export async function deleteCategory(categoryId: string, userId: string): Promise<Category | null> {
+  if (!isObjectIdString(categoryId) || !isObjectIdString(userId)) {
     return null;
   }
 
   await connectToDatabase();
 
-  const document = await CategoryModel.findByIdAndDelete(categoryId).exec();
+  const document = await CategoryModel.findOneAndDelete({
+    _id: categoryId,
+    userId
+  }).exec();
 
   return document ? mapCategoryDocument(document) : null;
 }

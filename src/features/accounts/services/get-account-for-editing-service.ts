@@ -1,7 +1,10 @@
 import "server-only";
 
-import { findAccountById } from "@/features/accounts/repositories/account-repository";
+import { findAccountByIdForUser } from "@/features/accounts/repositories/account-repository";
+import { requireAuthenticatedAppUser } from "@/lib/auth/session";
 
 export async function getAccountForEditing(accountId: string) {
-  return findAccountById(accountId);
+  const user = await requireAuthenticatedAppUser();
+
+  return findAccountByIdForUser(accountId, user.id);
 }

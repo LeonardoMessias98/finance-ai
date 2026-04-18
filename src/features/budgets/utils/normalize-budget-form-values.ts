@@ -5,7 +5,7 @@ export const defaultBudgetAlertThresholds = [80, 100] as const;
 
 export function normalizeBudgetFormValues(
   values: ParsedBudgetFormValues
-): CreateBudgetInput & { alertThresholds: number[] } {
+): Omit<CreateBudgetInput, "userId"> & { alertThresholds: number[] } {
   return {
     competencyMonth: values.competencyMonth,
     categoryId: values.categoryId,

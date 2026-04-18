@@ -16,6 +16,7 @@ import { type TransactionDocument, TransactionModel } from "@/lib/db/models/tran
 function mapTransactionDocument(document: HydratedDocument<TransactionDocument>): Transaction {
   return {
     id: document._id.toString(),
+    userId: document.userId.toString(),
     description: document.description,
     amount: document.amount,
     type: document.type,
@@ -42,7 +43,13 @@ export async function createTransaction(input: CreateTransactionInput): Promise<
 
   await connectToDatabase();
 
-  const document = await TransactionModel.create(payload);
+  // Ensure userId is converted to ObjectId for Mongoose
+  const documentData = {
+    ...payload,
+    userId: new Types.ObjectId(payload.userId)
+  };
+
+  const document = await TransactionModel.create(documentData);
 
   return mapTransactionDocument(document);
 }
@@ -77,8 +84,11 @@ export async function updateTransaction(input: UpdateTransactionInput): Promise<
 
   await connectToDatabase();
 
-  const document = await TransactionModel.findByIdAndUpdate(
-    payload.id,
+  const document = await TransactionModel.findOneAndUpdate(
+    {
+      _id: payload.id,
+      userId: payload.userId
+    },
     {
       $set: {
         description: payload.description,
@@ -112,22 +122,27 @@ export async function updateTransaction(input: UpdateTransactionInput): Promise<
   return document ? mapTransactionDocument(document) : null;
 }
 
-export async function findTransactionById(transactionId: string): Promise<Transaction | null> {
-  if (!isObjectIdString(transactionId)) {
+export async function findTransactionById(transactionId: string, userId: string): Promise<Transaction | null> {
+  if (!isObjectIdString(transactionId) || !isObjectIdString(userId)) {
     return null;
   }
 
   await connectToDatabase();
 
-  const document = await TransactionModel.findById(transactionId).exec();
+  const document = await TransactionModel.findOne({
+    _id: transactionId,
+    userId
+  }).exec();
 
   return document ? mapTransactionDocument(document) : null;
 }
 
-export async function listTransactions(filters: TransactionFilters = {}): Promise<Transaction[]> {
+export async function listTransactions(filters: TransactionFilters): Promise<Transaction[]> {
   await connectToDatabase();
 
-  const query: FilterQuery<TransactionDocument> = {};
+  const query: FilterQuery<TransactionDocument> = {
+    userId: filters.userId
+  };
 
   if (filters.competencyMonth) {
     query.competencyMonth = filters.competencyMonth;
@@ -174,26 +189,30 @@ export async function listTransactions(filters: TransactionFilters = {}): Promis
   return documents.map(mapTransactionDocument);
 }
 
-export async function deleteTransaction(transactionId: string): Promise<Transaction | null> {
-  if (!isObjectIdString(transactionId)) {
+export async function deleteTransaction(transactionId: string, userId: string): Promise<Transaction | null> {
+  if (!isObjectIdString(transactionId) || !isObjectIdString(userId)) {
     return null;
   }
 
   await connectToDatabase();
 
-  const document = await TransactionModel.findByIdAndDelete(transactionId).exec();
+  const document = await TransactionModel.findOneAndDelete({
+    _id: transactionId,
+    userId
+  }).exec();
 
   return document ? mapTransactionDocument(document) : null;
 }
 
-export async function deleteTransactionSeries(parentTransactionId: string): Promise<number> {
-  if (!isObjectIdString(parentTransactionId)) {
+export async function deleteTransactionSeries(parentTransactionId: string, userId: string): Promise<number> {
+  if (!isObjectIdString(parentTransactionId) || !isObjectIdString(userId)) {
     return 0;
   }
 
   await connectToDatabase();
 
   const result = await TransactionModel.deleteMany({
+    userId,
     parentTransactionId
   }).exec();
 

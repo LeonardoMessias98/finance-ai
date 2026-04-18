@@ -11,7 +11,7 @@ function normalizeOptionalValue(value: string | undefined): string | undefined {
   return trimmedValue.length > 0 ? trimmedValue : undefined;
 }
 
-export function normalizeCategoryFormValues(values: ParsedCategoryFormValues): CreateCategoryInput {
+export function normalizeCategoryFormValues(values: ParsedCategoryFormValues): Omit<CreateCategoryInput, "userId"> {
   return {
     name: values.name.trim(),
     type: values.type,

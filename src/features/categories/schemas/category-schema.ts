@@ -18,6 +18,7 @@ const optionalCategoryColorSchema = z.preprocess(emptyStringToUndefined, categor
 const optionalCategoryIconSchema = z.preprocess(emptyStringToUndefined, categoryIconSchema.optional());
 
 const categoryMutationFieldsSchema = z.object({
+  userId: objectIdStringSchema,
   name: z.string().trim().min(1, "Informe o nome da categoria.").max(80, "Use no máximo 80 caracteres."),
   type: z.enum(categoryTypeValues, {
     errorMap: () => ({

@@ -13,6 +13,7 @@ type TransactionInstallmentDocument = {
 };
 
 export type TransactionDocument = {
+  userId: Types.ObjectId;
   description: string;
   amount: number;
   type: TransactionType;
@@ -54,6 +55,11 @@ const validStatusByTransactionType: Record<TransactionType, readonly Transaction
 
 const transactionSchema = new Schema<TransactionDocument>(
   {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
     description: {
       type: String,
       required: true,
@@ -162,17 +168,20 @@ transactionSchema.pre("validate", function validateTransaction(next) {
 });
 
 transactionSchema.index({
+  userId: 1,
   competencyMonth: 1,
   date: -1
 });
 
 transactionSchema.index({
+  userId: 1,
   accountId: 1,
   date: -1
 });
 
 transactionSchema.index(
   {
+    userId: 1,
     destinationAccountId: 1,
     date: -1
   },
@@ -187,6 +196,7 @@ transactionSchema.index(
 
 transactionSchema.index(
   {
+    userId: 1,
     categoryId: 1,
     competencyMonth: 1
   },
@@ -200,6 +210,7 @@ transactionSchema.index(
 );
 
 transactionSchema.index({
+  userId: 1,
   type: 1,
   status: 1,
   date: -1
@@ -207,6 +218,7 @@ transactionSchema.index({
 
 transactionSchema.index(
   {
+    userId: 1,
     parentTransactionId: 1
   },
   {

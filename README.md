@@ -23,19 +23,20 @@ O MVP deve parecer uma planilha pessoal bem resolvida:
 - criação rápida de transação
 - módulos auxiliares como contas, categorias, orçamentos e metas com peso secundário
 
-## Stack
+## Regras de negócio
 
-- Next.js com App Router
-- TypeScript
-- Tailwind CSS
-- shadcn/ui
-- MongoDB Atlas
-- Mongoose
-- Zod
-- React Hook Form
-- Vitest
-- Testing Library
-- Playwright
+### Categorias
+- Usuários diferentes podem ter categorias com o mesmo nome
+- Um usuário não pode ter duas categorias com mesmo nome e tipo
+- Categorias são validadas por usuário (multiusuário)
+
+### Contas
+- Usuários diferentes podem ter contas com o mesmo nome
+- Um usuário não pode ter duas contas com mesmo nome e tipo
+
+### Transações
+- Vinculadas a contas e categorias do usuário
+- Validações de saldo e regras de negócio por usuário
 
 ## Estrutura
 
@@ -83,14 +84,51 @@ Se preferir, o CLI também consegue ler `.env`, mas `.env.local` continua sendo 
 3. Configure:
 
 - `MONGODB_URI`
+- `AUTH_JWT_SECRET`
 
 Use uma URI completa, com usuário, senha e nome do banco. Exemplo:
 
 ```bash
-MONGODB_URI="mongodb+srv://<user>:<password>@<cluster>/finance-ai?retryWrites=true&w=majority"
+MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>/finance-ai?retryWrites=true&w=majority
+AUTH_JWT_SECRET=change-me-with-a-long-random-secret
 ```
 
 Se a senha tiver caracteres especiais, faça URL encoding antes de salvar a URI.
+
+Opcionalmente, o seed pode receber dados do usuario inicial:
+
+```bash
+SEED_USER_EMAIL=owner@finance-ai.local
+SEED_USER_PASSWORD_HASH=8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92
+```
+
+O hash acima corresponde a `123456`.
+
+## Scripts administrativos
+
+### Reset completo do banco
+
+**Cuidado:** Este comando deleta TODOS os dados!
+
+```bash
+npm run reset:admin -- --confirm
+```
+
+Limpa todas as coleções e cria um usuário inicial. Útil para desenvolvimento e testes.
+
+### Criar novo usuário
+
+```bash
+npm run user:create
+```
+
+Cria um novo usuário sem afetar dados existentes. Suporta prefixos customizados:
+
+```bash
+USER_PREFIX=ADMIN npm run user:create
+```
+
+Ver `ADMIN_RESET.md` para documentação completa.
 
 4. Rode a aplicação:
 
@@ -128,10 +166,18 @@ Para incluir dados opcionais de exemplo para desenvolvimento rápido:
 npm run seed -- --with-sample-data
 ```
 
+Para limpar os registros atuais e recriar o usuário inicial com dados limpos:
+
+```bash
+npm run seed:reset
+npm run seed:reset -- --with-sample-data
+```
+
 O script carrega variáveis locais via `@next/env` e usa `MONGODB_URI` para conectar no MongoDB. `.env.local` é o formato recomendado, mas `.env` também funciona.
 
 Dados criados por padrão:
 
+- um usuario inicial
 - contas padrão
 - categorias de receita
 - categorias de despesa
@@ -142,6 +188,30 @@ Dados opcionais com `--with-sample-data`:
 - transações de exemplo no mês atual
 - um orçamento de exemplo
 - uma meta de exemplo
+
+Credenciais padrão do seed:
+
+- email: `owner@finance-ai.local`
+- senha: `123456`
+
+Você pode sobrescrever esses valores com `SEED_USER_*`.
+
+## Autenticacao
+
+- sem signup publico
+- login por email e senha
+- a senha e transformada em SHA-256 no cliente antes do envio
+- o servidor compara o hash recebido com `passwordHash` salvo no banco
+- o login gera `access token` JWT com 1 hora de expiracao e `refresh token` persistido no MongoDB
+- apenas uma sessao ativa por usuario; um novo login invalida a sessao anterior
+- rotas financeiras exigem usuario autenticado
+- dados financeiros sao sempre filtrados por `userId`
+
+Decisao de produto sobre senha:
+
+- o `SHA-256` recebido do front e salvo exatamente nesse formato
+- isso foi adotado para reduzir atrito no MVP
+- isso nao e a abordagem mais segura recomendada para autenticacao web e permanece como trade-off consciente do produto
 
 ## Testes
 
@@ -186,4 +256,6 @@ Estrutura preparada:
 - saldo e transações como centro da experiência
 - navegação por competência mensal
 - criação de transação simplificada
+- autenticação por email com sessão única
+- isolamento multiusuário por `userId`
 - documentação operacional pronta para outros agentes

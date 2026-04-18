@@ -1,32 +1,35 @@
 import "server-only";
 
 import type { AppSession, AuthenticatedAppUser } from "@/types/auth";
-
-const AUTH_NOT_CONFIGURED_MESSAGE =
-  "Autenticação ainda não configurada. Implemente Auth.js antes de exigir sessão autenticada.";
+import {
+  AuthenticationRequiredError,
+  getAuthenticatedSessionFromCookies
+} from "@/lib/auth/session-cookies";
 
 export async function getOptionalAuthenticatedAppUser(): Promise<AuthenticatedAppUser | null> {
-  return null;
-}
+  const session = await getAuthenticatedSessionFromCookies();
 
-export async function getOptionalAppSession(): Promise<AppSession | null> {
-  const user = await getOptionalAuthenticatedAppUser();
-
-  if (!user) {
+  if (!session) {
     return null;
   }
 
-  return {
-    user
-  };
+  return session.user;
+}
+
+export async function getOptionalAppSession(): Promise<AppSession | null> {
+  return getAuthenticatedSessionFromCookies();
 }
 
 export async function requireAuthenticatedAppUser(): Promise<AuthenticatedAppUser> {
   const user = await getOptionalAuthenticatedAppUser();
 
   if (!user) {
-    throw new Error(AUTH_NOT_CONFIGURED_MESSAGE);
+    throw new AuthenticationRequiredError();
   }
 
   return user;
+}
+
+export function isAuthenticationRequiredError(error: unknown): error is AuthenticationRequiredError {
+  return error instanceof AuthenticationRequiredError;
 }

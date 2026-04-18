@@ -7,6 +7,7 @@ describe("calculateGoalListItem", () => {
   it("caps the visual progress at 100 and preserves completed state", () => {
     const goal: Goal = {
       id: "goal-1",
+      userId: "user-1",
       name: "Reserva de emergência",
       targetAmount: 10_000,
       currentAmount: 12_500,

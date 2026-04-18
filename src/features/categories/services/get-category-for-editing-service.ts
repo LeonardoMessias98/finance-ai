@@ -1,7 +1,10 @@
 import "server-only";
 
-import { findCategoryById } from "@/features/categories/repositories/category-repository";
+import { findCategoryByIdForUser } from "@/features/categories/repositories/category-repository";
+import { requireAuthenticatedAppUser } from "@/lib/auth/session";
 
 export async function getCategoryForEditing(categoryId: string) {
-  return findCategoryById(categoryId);
+  const user = await requireAuthenticatedAppUser();
+
+  return findCategoryByIdForUser(categoryId, user.id);
 }

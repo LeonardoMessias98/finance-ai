@@ -1,8 +1,9 @@
-import { type Model, Schema, model, models } from "mongoose";
+import { type Model, Schema, type Types, model, models } from "mongoose";
 
 import { accountTypeValues, type AccountType } from "@/features/accounts/types/account";
 
 export type AccountDocument = {
+  userId: Types.ObjectId;
   name: string;
   type: AccountType;
   initialBalance: number;
@@ -13,6 +14,11 @@ export type AccountDocument = {
 
 const accountSchema = new Schema<AccountDocument>(
   {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
     name: {
       type: String,
       required: true,
@@ -51,6 +57,7 @@ const accountSchema = new Schema<AccountDocument>(
 );
 
 accountSchema.index({
+  userId: 1,
   isActive: 1,
   type: 1,
   name: 1

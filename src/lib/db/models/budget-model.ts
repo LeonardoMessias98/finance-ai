@@ -1,6 +1,7 @@
 import { type Model, Schema, type Types, model, models } from "mongoose";
 
 export type BudgetDocument = {
+  userId: Types.ObjectId;
   competencyMonth: string;
   categoryId: Types.ObjectId;
   limitAmount: number;
@@ -9,6 +10,11 @@ export type BudgetDocument = {
 
 const budgetSchema = new Schema<BudgetDocument>(
   {
+    userId: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
     competencyMonth: {
       type: String,
       required: true,
@@ -46,6 +52,7 @@ const budgetSchema = new Schema<BudgetDocument>(
 
 budgetSchema.index(
   {
+    userId: 1,
     competencyMonth: 1,
     categoryId: 1
   },
@@ -55,6 +62,7 @@ budgetSchema.index(
 );
 
 budgetSchema.index({
+  userId: 1,
   competencyMonth: 1
 });
 

@@ -6,6 +6,7 @@ import type { CreateTransactionInput } from "@/features/transactions/types/trans
 describe("buildInstallmentTransactions", () => {
   it("splits an expense into future installments with matching competency months", () => {
     const transaction: CreateTransactionInput = {
+      userId: "user-1",
       description: "Notebook parcelado",
       amount: 10_001,
       type: "expense",

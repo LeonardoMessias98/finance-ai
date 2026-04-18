@@ -1,5 +1,8 @@
+import { redirect } from "next/navigation";
+
 import { TransactionsPage } from "@/features/transactions/components/transactions-page";
 import { transactionTypeValues, type TransactionType } from "@/features/transactions/types/transaction";
+import { getOptionalAuthenticatedAppUser } from "@/lib/auth/session";
 import { getCurrentCompetencyMonth, isCompetencyMonth } from "@/lib/dates/competency-month";
 
 type TransactionsRoutePageProps = {
@@ -23,6 +26,12 @@ function isTruthySearchParam(value: string | string[] | undefined): boolean {
 }
 
 export default async function TransactionsRoutePage({ searchParams }: TransactionsRoutePageProps) {
+  const user = await getOptionalAuthenticatedAppUser();
+
+  if (!user) {
+    redirect("/login?next=/transactions");
+  }
+
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const editingTransactionId =
     typeof resolvedSearchParams.transactionId === "string" ? resolvedSearchParams.transactionId : undefined;
