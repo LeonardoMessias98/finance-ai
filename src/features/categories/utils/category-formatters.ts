@@ -2,8 +2,7 @@ import type { CategoryType } from "@/features/categories/types/category";
 
 const categoryTypeLabelMap: Record<CategoryType, string> = {
   income: "Receita",
-  expense: "Despesa",
-  transfer: "Transferência"
+  expense: "Despesa"
 };
 
 export function getCategoryTypeLabel(categoryType: CategoryType): string {

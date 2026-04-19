@@ -4,9 +4,10 @@ import { PencilLine } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { AccountDeleteButton } from "@/features/accounts/components/account-delete-button";
-import { AccountStatusToggleButton } from "@/features/accounts/components/account-status-toggle-button";
 import type { Account } from "@/features/accounts/types/account";
+import { buildAccountsHref } from "@/features/accounts/utils/build-accounts-href";
 import { formatAccountBalanceFromCents, getAccountTypeLabel } from "@/features/accounts/utils/account-formatters";
 import { cn } from "@/lib/utils";
 
@@ -16,7 +17,7 @@ type AccountsListProps = {
 };
 
 export function AccountsList({ accounts, editingAccountId }: AccountsListProps) {
-  const redirectHref = "/accounts";
+  const redirectHref = buildAccountsHref();
 
   return (
     <Card className="border-primary/10 bg-card/85">
@@ -25,9 +26,7 @@ export function AccountsList({ accounts, editingAccountId }: AccountsListProps) 
       </CardHeader>
       <CardContent>
         {accounts.length === 0 ? (
-          <div className="rounded-[1.5rem] border border-dashed border-border bg-background/60 px-5 py-8 text-center text-sm text-muted-foreground">
-            Nenhuma conta cadastrada.
-          </div>
+          <EmptyState className="bg-background/60" message="Nenhuma conta cadastrada." />
         ) : (
           <div className="space-y-3">
             {accounts.map((account) => (
@@ -60,7 +59,7 @@ export function AccountsList({ accounts, editingAccountId }: AccountsListProps) 
                 </div>
                 <div className="flex flex-wrap items-start gap-3 lg:justify-end">
                   <Button asChild size="sm" variant="outline">
-                    <Link href={`/accounts?accountId=${account.id}`}>
+                    <Link href={buildAccountsHref({ accountId: account.id })}>
                       <PencilLine className="h-4 w-4" />
                       Editar
                     </Link>

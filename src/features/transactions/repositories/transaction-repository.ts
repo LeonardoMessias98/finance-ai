@@ -24,7 +24,6 @@ function mapTransactionDocument(document: HydratedDocument<TransactionDocument>)
     competencyMonth: document.competencyMonth,
     categoryId: document.categoryId?.toString(),
     accountId: document.accountId.toString(),
-    destinationAccountId: document.destinationAccountId?.toString(),
     notes: document.notes,
     status: document.status,
     isRecurring: document.isRecurring,
@@ -100,14 +99,12 @@ export async function updateTransaction(input: UpdateTransactionInput): Promise<
         status: payload.status,
         isRecurring: payload.isRecurring,
         ...(payload.categoryId ? { categoryId: payload.categoryId } : {}),
-        ...(payload.destinationAccountId ? { destinationAccountId: payload.destinationAccountId } : {}),
         ...(payload.notes ? { notes: payload.notes } : {}),
         ...(payload.installment ? { installment: payload.installment } : {}),
         ...(payload.parentTransactionId ? { parentTransactionId: payload.parentTransactionId } : {})
       },
       $unset: {
         ...(payload.categoryId ? {} : { categoryId: 1 }),
-        ...(payload.destinationAccountId ? {} : { destinationAccountId: 1 }),
         ...(payload.notes ? {} : { notes: 1 }),
         ...(payload.installment ? {} : { installment: 1 }),
         ...(payload.parentTransactionId ? {} : { parentTransactionId: 1 })
@@ -161,14 +158,7 @@ export async function listTransactions(filters: TransactionFilters): Promise<Tra
       return [];
     }
 
-    query.$or = [
-      {
-        accountId: filters.accountId
-      },
-      {
-        destinationAccountId: filters.accountId
-      }
-    ];
+    query.accountId = filters.accountId;
   }
 
   if (filters.categoryId) {

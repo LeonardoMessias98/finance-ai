@@ -1,15 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 
 import { ServiceWorkerRegistration } from "@/components/pwa/service-worker-registration";
 
 import "./globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-sans",
-  display: "swap"
-});
 
 export const metadata: Metadata = {
   title: "Finance AI",
@@ -62,7 +55,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body className={`${inter.variable} min-h-screen bg-background antialiased`}>
+      <body className="min-h-screen bg-background antialiased">
         {children}
         <ServiceWorkerRegistration />
       </body>

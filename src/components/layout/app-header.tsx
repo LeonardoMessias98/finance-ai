@@ -1,8 +1,7 @@
 import Link from "next/link";
 
-import { Button } from "@/components/ui/button";
 import { LogoutButton } from "@/features/auth/components/logout-button";
-import { getCurrentCompetencyMonth } from "@/lib/dates/competency-month";
+import { OpenTransactionModalButton } from "@/features/transactions/components/open-transaction-modal-button";
 
 const navigationLinks = [
   {
@@ -32,8 +31,6 @@ const navigationLinks = [
 ];
 
 export function AppHeader() {
-  const currentCompetencyMonth = getCurrentCompetencyMonth();
-
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-background/88 backdrop-blur">
       <div className="mx-auto flex max-w-5xl items-center gap-3 px-4 py-3 sm:px-6">
@@ -59,9 +56,7 @@ export function AppHeader() {
           </div>
         </nav>
 
-        <Button asChild className="shrink-0 px-3 sm:px-4">
-          <Link href={`/transactions?competencyMonth=${currentCompetencyMonth}`}>Nova transação</Link>
-        </Button>
+        <OpenTransactionModalButton className="shrink-0 px-3 sm:px-4">Nova transação</OpenTransactionModalButton>
 
         <LogoutButton />
       </div>

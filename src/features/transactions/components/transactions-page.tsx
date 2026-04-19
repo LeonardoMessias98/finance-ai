@@ -1,11 +1,15 @@
 import Link from "next/link";
 
-import { AppShell } from "@/components/layout/app-shell";
+import { AuthenticatedAppShell } from "@/components/layout/authenticated-app-shell";
+import { PageHeader } from "@/components/layout/page-header";
+import { PageSection } from "@/components/layout/page-section";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ModalShell } from "@/components/ui/modal-shell";
+import { StatusBanner } from "@/components/ui/status-banner";
 import { listAccountsForManagement } from "@/features/accounts/services/list-accounts-for-management-service";
 import { listCategoriesForManagement } from "@/features/categories/services/list-categories-for-management-service";
+import { OpenTransactionModalButton } from "@/features/transactions/components/open-transaction-modal-button";
 import { TransactionForm } from "@/features/transactions/components/transaction-form";
 import {
   TransactionsFiltersPanel,
@@ -23,7 +27,6 @@ import {
 
 type TransactionsPageProps = {
   editingTransactionId?: string;
-  isCreateModalOpen?: boolean;
   isFiltersModalOpen?: boolean;
   filters: {
     competencyMonth: string;
@@ -35,7 +38,6 @@ type TransactionsPageProps = {
 
 export async function TransactionsPage({
   editingTransactionId,
-  isCreateModalOpen = false,
   isFiltersModalOpen = false,
   filters
 }: TransactionsPageProps) {
@@ -55,42 +57,40 @@ export async function TransactionsPage({
   const netFlow = totalIncome - totalExpense;
   const hasEditingError = Boolean(editingTransactionId) && !editingTransaction;
   const returnHref = buildTransactionsHref(filters);
-  const createModalHref = buildTransactionsHref({
-    ...filters,
-    create: true
-  });
   const filtersModalHref = buildTransactionsHref({
     ...filters,
     filtersModal: true
   });
   const scopeLabel = formatTransactionCompetencyMonth(filters.competencyMonth);
-  const isTransactionModalOpen = isCreateModalOpen || Boolean(editingTransaction);
+  const isEditingModalOpen = Boolean(editingTransaction);
 
   return (
-    <AppShell>
-      <section className="space-y-6 pt-1">
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-1">
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground">Transações</h1>
-            <p className="text-sm text-muted-foreground">
-              {scopeLabel} · {transactions.length} lançamentos
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3">
-            <Button asChild className="lg:hidden" type="button" variant="outline">
-              <Link href={filtersModalHref}>Filtros</Link>
-            </Button>
-            <Button asChild className="sm:min-w-[12rem]" type="button">
-              <Link href={createModalHref}>Nova transação</Link>
-            </Button>
-          </div>
-        </div>
+    <AuthenticatedAppShell>
+      <PageSection>
+        <PageHeader
+          actions={
+            <>
+              <Button asChild className="lg:hidden" type="button" variant="outline">
+                <Link href={filtersModalHref}>Filtros</Link>
+              </Button>
+              <OpenTransactionModalButton
+                className="sm:min-w-[12rem]"
+                defaultCompetencyMonth={filters.competencyMonth}
+                defaultType={filters.type}
+              >
+                Nova transação
+              </OpenTransactionModalButton>
+            </>
+          }
+          description={`${scopeLabel} · ${transactions.length} lançamentos`}
+          title="Transações"
+        />
 
         {hasEditingError ? (
-          <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-            A transação selecionada para edição não foi encontrada. A página voltou ao modo de criação.
-          </div>
+          <StatusBanner
+            message="A transação selecionada para edição não foi encontrada. A página voltou ao modo de criação."
+            variant="error"
+          />
         ) : null}
 
         <div className="grid gap-5 lg:grid-cols-[20.5rem_minmax(0,1fr)] xl:grid-cols-[20.5rem_minmax(0,1fr)]">
@@ -143,7 +143,7 @@ export async function TransactionsPage({
           </ModalShell>
         ) : null}
 
-        {isTransactionModalOpen ? (
+        {isEditingModalOpen ? (
           <ModalShell
             closeHref={returnHref}
             contentClassName="pt-6"
@@ -162,7 +162,7 @@ export async function TransactionsPage({
             />
           </ModalShell>
         ) : null}
-      </section>
-    </AppShell>
+      </PageSection>
+    </AuthenticatedAppShell>
   );
 }

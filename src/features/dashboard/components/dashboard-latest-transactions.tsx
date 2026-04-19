@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { DashboardLatestTransaction } from "@/features/dashboard/types/dashboard-financial-summary";
@@ -58,9 +59,7 @@ export function DashboardLatestTransactions({
       </CardHeader>
       <CardContent>
         {latestTransactions.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-border bg-secondary px-4 py-8 text-center text-sm text-muted-foreground">
-            {emptyStateMessage}
-          </div>
+          <EmptyState className="rounded-xl bg-secondary" message={emptyStateMessage} />
         ) : (
           <div className="space-y-2">
             {latestTransactions.map((transaction) => {
@@ -85,9 +84,6 @@ export function DashboardLatestTransactions({
                     </p>
                     <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                       <TransactionMetaBadge>{transaction.accountName}</TransactionMetaBadge>
-                      {transaction.destinationAccountName ? (
-                        <TransactionMetaBadge>{transaction.destinationAccountName}</TransactionMetaBadge>
-                      ) : null}
                       {transaction.categoryName ? (
                         <TransactionMetaBadge tone="category">{transaction.categoryName}</TransactionMetaBadge>
                       ) : null}
@@ -95,7 +91,7 @@ export function DashboardLatestTransactions({
                   </div>
                   <div className="flex items-center justify-between gap-3 lg:flex-col lg:items-end">
                     <p className={`text-base font-semibold ${getTransactionTypeAmountClassName(transaction.type)}`}>
-                      {transaction.type === "income" ? "+" : transaction.type === "expense" ? "-" : ""}
+                      {transaction.type === "income" ? "+" : "-"}
                       {formatTransactionAmountFromCents(transaction.amount)}
                     </p>
                     <Button asChild size="sm" variant="ghost">

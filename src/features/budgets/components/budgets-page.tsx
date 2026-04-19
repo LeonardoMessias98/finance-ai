@@ -1,5 +1,10 @@
-import { AppShell } from "@/components/layout/app-shell";
+import { AuthenticatedAppShell } from "@/components/layout/authenticated-app-shell";
+import { PageHeader } from "@/components/layout/page-header";
+import { PageSection } from "@/components/layout/page-section";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { MobileOnlyModalShell } from "@/components/ui/mobile-only-modal-shell";
+import { StatusBanner } from "@/components/ui/status-banner";
 import { listCategoriesForManagement } from "@/features/categories/services/list-categories-for-management-service";
 import { BudgetForm } from "@/features/budgets/components/budget-form";
 import { BudgetsList } from "@/features/budgets/components/budgets-list";
@@ -9,13 +14,19 @@ import { listBudgetsForManagement } from "@/features/budgets/services/list-budge
 import { buildBudgetsHref } from "@/features/budgets/utils/build-budgets-href";
 import { formatTransactionCompetencyMonth } from "@/features/transactions/utils/transaction-formatters";
 import { formatAccountBalanceFromCents } from "@/features/accounts/utils/account-formatters";
+import Link from "next/link";
 
 type BudgetsPageProps = {
   editingBudgetId?: string;
+  isCreateModalOpen?: boolean;
   competencyMonth: string;
 };
 
-export async function BudgetsPage({ editingBudgetId, competencyMonth }: BudgetsPageProps) {
+export async function BudgetsPage({
+  editingBudgetId,
+  isCreateModalOpen = false,
+  competencyMonth
+}: BudgetsPageProps) {
   const [budgets, editingBudget, categories] = await Promise.all([
     listBudgetsForManagement({
       competencyMonth
@@ -34,21 +45,30 @@ export async function BudgetsPage({ editingBudgetId, competencyMonth }: BudgetsP
   const returnHref = buildBudgetsHref({
     competencyMonth
   });
+  const createHref = buildBudgetsHref({
+    competencyMonth,
+    create: true
+  });
+  const isMobileModalOpen = isCreateModalOpen || Boolean(editingBudget);
 
   return (
-    <AppShell>
-      <section className="space-y-6 pt-1">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Orçamentos</h1>
-          <p className="text-sm text-muted-foreground">
-            {formatTransactionCompetencyMonth(competencyMonth)} · {budgets.length} categorias acompanhadas
-          </p>
-        </div>
+    <AuthenticatedAppShell>
+      <PageSection>
+        <PageHeader
+          actions={
+            <Button asChild className="lg:hidden" type="button">
+              <Link href={createHref}>Novo orçamento</Link>
+            </Button>
+          }
+          description={`${formatTransactionCompetencyMonth(competencyMonth)} · ${budgets.length} categorias acompanhadas`}
+          title="Orçamentos"
+        />
 
         {hasEditingError ? (
-          <div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
-            O orçamento selecionado para edição não foi encontrado. A página voltou ao modo de criação.
-          </div>
+          <StatusBanner
+            message="O orçamento selecionado para edição não foi encontrado. A página voltou ao modo de criação."
+            variant="error"
+          />
         ) : null}
 
         <BudgetsMonthFilter competencyMonth={competencyMonth} />
@@ -72,14 +92,33 @@ export async function BudgetsPage({ editingBudgetId, competencyMonth }: BudgetsP
 
         <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
           <BudgetsList budgets={budgets} competencyMonth={competencyMonth} editingBudgetId={editingBudget?.id} />
-          <BudgetForm
-            budget={editingBudget}
-            categories={categories}
-            defaultCompetencyMonth={competencyMonth}
-            returnHref={returnHref}
-          />
+          <div className="hidden lg:block">
+            <BudgetForm
+              budget={editingBudget}
+              categories={categories}
+              defaultCompetencyMonth={competencyMonth}
+              returnHref={returnHref}
+            />
+          </div>
         </div>
-      </section>
-    </AppShell>
+
+        {isMobileModalOpen ? (
+          <MobileOnlyModalShell
+            closeHref={returnHref}
+            mobileFullscreen
+            title={editingBudget ? "Editar orçamento" : "Novo orçamento"}
+          >
+            <BudgetForm
+              budget={editingBudget}
+              categories={categories}
+              closeOnSuccess
+              defaultCompetencyMonth={competencyMonth}
+              returnHref={returnHref}
+              showCard={false}
+            />
+          </MobileOnlyModalShell>
+        ) : null}
+      </PageSection>
+    </AuthenticatedAppShell>
   );
 }

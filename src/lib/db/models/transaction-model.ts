@@ -21,7 +21,6 @@ export type TransactionDocument = {
   competencyMonth: string;
   categoryId?: Types.ObjectId;
   accountId: Types.ObjectId;
-  destinationAccountId?: Types.ObjectId;
   notes?: string;
   status: TransactionStatus;
   isRecurring: boolean;
@@ -49,8 +48,7 @@ const installmentSchema = new Schema<TransactionInstallmentDocument>(
 
 const validStatusByTransactionType: Record<TransactionType, readonly TransactionStatus[]> = {
   income: ["planned", "received", "overdue"],
-  expense: ["planned", "paid", "overdue"],
-  transfer: ["planned", "paid", "overdue"]
+  expense: ["planned", "paid", "overdue"]
 };
 
 const transactionSchema = new Schema<TransactionDocument>(
@@ -94,10 +92,6 @@ const transactionSchema = new Schema<TransactionDocument>(
       ref: "Account",
       required: true
     },
-    destinationAccountId: {
-      type: Schema.Types.ObjectId,
-      ref: "Account"
-    },
     notes: {
       type: String,
       trim: true,
@@ -138,26 +132,8 @@ transactionSchema.pre("validate", function validateTransaction(next) {
     transaction.invalidate("parentTransactionId", "Installment transactions must define a series parent.");
   }
 
-  if (transaction.type === "transfer") {
-    if (!transaction.destinationAccountId) {
-      transaction.invalidate("destinationAccountId", "Transfers require a destination account.");
-    }
-
-    if (
-      transaction.destinationAccountId &&
-      transaction.accountId &&
-      transaction.destinationAccountId.equals(transaction.accountId)
-    ) {
-      transaction.invalidate("destinationAccountId", "Transfer destination account must be different from the source account.");
-    }
-  } else {
-    if (!transaction.categoryId) {
-      transaction.invalidate("categoryId", "Income and expense transactions require a category.");
-    }
-
-    if (transaction.destinationAccountId) {
-      transaction.invalidate("destinationAccountId", "Only transfers may define a destination account.");
-    }
+  if (!transaction.categoryId) {
+    transaction.invalidate("categoryId", "Income and expense transactions require a category.");
   }
 
   if (!validStatusByTransactionType[transaction.type].includes(transaction.status)) {
@@ -178,21 +154,6 @@ transactionSchema.index({
   accountId: 1,
   date: -1
 });
-
-transactionSchema.index(
-  {
-    userId: 1,
-    destinationAccountId: 1,
-    date: -1
-  },
-  {
-    partialFilterExpression: {
-      destinationAccountId: {
-        $exists: true
-      }
-    }
-  }
-);
 
 transactionSchema.index(
   {

@@ -49,7 +49,6 @@ export function getDefaultTransactionFormValues(input: {
     installmentCount: input.transaction?.installment?.total ?? 1,
     categoryId: input.transaction?.categoryId ?? "",
     accountId: getDefaultTransactionAccountId(input.accounts, input.transaction?.accountId),
-    destinationAccountId: input.transaction?.destinationAccountId ?? "",
     notes: input.transaction?.notes ?? "",
     status: input.transaction?.status ?? getDefaultTransactionStatus(transactionType),
     isRecurring: input.transaction?.isRecurring ?? false

@@ -1,4 +1,5 @@
 import type { AccountType } from "@/features/accounts/types/account";
+import type { DashboardAnalytics } from "@/features/dashboard/types/dashboard-analytics";
 import type { TransactionStatus, TransactionType } from "@/features/transactions/types/transaction";
 
 export type DashboardAccountBalance = {
@@ -25,7 +26,6 @@ export type DashboardLatestTransaction = {
   status: TransactionStatus;
   date: Date;
   accountName: string;
-  destinationAccountName?: string;
   categoryName?: string;
 };
 
@@ -39,4 +39,5 @@ export type DashboardFinancialSummary = {
   incomeTotalsByCategory: DashboardCategoryTotal[];
   expenseTotalsByCategory: DashboardCategoryTotal[];
   latestTransactions: DashboardLatestTransaction[];
+  analytics: DashboardAnalytics;
 };

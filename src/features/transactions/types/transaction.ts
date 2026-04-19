@@ -1,4 +1,4 @@
-export const transactionTypeValues = ["income", "expense", "transfer"] as const;
+export const transactionTypeValues = ["income", "expense"] as const;
 export const transactionStatusValues = ["planned", "paid", "received", "overdue"] as const;
 
 export type TransactionType = (typeof transactionTypeValues)[number];
@@ -12,7 +12,6 @@ export type TransactionFieldName =
   | "installmentCount"
   | "categoryId"
   | "accountId"
-  | "destinationAccountId"
   | "notes"
   | "status"
   | "isRecurring";
@@ -33,7 +32,6 @@ export type Transaction = {
   competencyMonth: string;
   categoryId?: string;
   accountId: string;
-  destinationAccountId?: string;
   notes?: string;
   status: TransactionStatus;
   isRecurring: boolean;
@@ -50,7 +48,6 @@ export type CreateTransactionInput = {
   competencyMonth: string;
   categoryId?: string;
   accountId: string;
-  destinationAccountId?: string;
   notes?: string;
   status: TransactionStatus;
   isRecurring?: boolean;

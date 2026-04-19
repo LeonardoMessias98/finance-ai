@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 import { CompetencyMonthSwitcher } from "@/components/filters/competency-month-switcher";
+import { FilterPanel } from "@/components/filters/filter-panel";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import type { Account } from "@/features/accounts/types/account";
@@ -128,18 +128,15 @@ export function TransactionsFiltersPanel({
 
 export function TransactionsFiltersSidebar({ accounts, categories, filters }: TransactionsFiltersProps) {
   return (
-    <Card className="border-primary/10 bg-card/85">
-      <CardHeader className="space-y-1">
-        <CardTitle className="text-xl">Filtros</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-5 pt-5">
+    <FilterPanel title="Filtros">
+      <div className="space-y-5">
         <TransactionsFiltersPanel
           accounts={accounts}
           categories={categories}
           fieldPrefix="transactions-sidebar"
           filters={filters}
         />
-      </CardContent>
-    </Card>
+      </div>
+    </FilterPanel>
   );
 }

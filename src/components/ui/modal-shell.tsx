@@ -10,22 +10,24 @@ import { cn } from "@/lib/utils";
 
 type ModalShellProps = {
   title: string;
-  closeHref: string;
   children: ReactNode;
+  closeHref?: string;
   description?: string;
   mobileFullscreen?: boolean;
   className?: string;
   contentClassName?: string;
+  onClose?: () => void;
 };
 
 export function ModalShell({
   title,
-  closeHref,
   children,
+  closeHref,
   description,
   mobileFullscreen = false,
   className,
-  contentClassName
+  contentClassName,
+  onClose
 }: ModalShellProps) {
   const router = useRouter();
   const titleId = useId();
@@ -47,7 +49,15 @@ export function ModalShell({
       }
 
       event.preventDefault();
-      router.replace(closeHref);
+
+      if (onClose) {
+        onClose();
+        return;
+      }
+
+      if (closeHref) {
+        router.replace(closeHref);
+      }
     };
 
     document.addEventListener("keydown", handleKeyDown);
@@ -57,10 +67,17 @@ export function ModalShell({
       document.removeEventListener("keydown", handleKeyDown);
       cancelAnimationFrame(focusFrame);
     };
-  }, [closeHref, router]);
+  }, [closeHref, onClose, router]);
 
   const handleClose = () => {
-    router.replace(closeHref);
+    if (onClose) {
+      onClose();
+      return;
+    }
+
+    if (closeHref) {
+      router.replace(closeHref);
+    }
   };
 
   return (

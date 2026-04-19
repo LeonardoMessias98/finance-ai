@@ -4,6 +4,7 @@ import { PencilLine } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { GoalListItem } from "@/features/goals/types/goal";
 import { buildGoalsHref } from "@/features/goals/utils/build-goals-href";
 import { formatGoalAmountFromCents, formatGoalDate, getGoalStatusLabel } from "@/features/goals/utils/goal-formatters";
@@ -30,9 +31,7 @@ export function GoalsList({ goals, editingGoalId }: GoalsListProps) {
       </CardHeader>
       <CardContent>
         {goals.length === 0 ? (
-          <div className="rounded-[1.5rem] border border-dashed border-border bg-background/60 px-5 py-8 text-center text-sm text-muted-foreground">
-            Nenhuma meta cadastrada.
-          </div>
+          <EmptyState className="bg-background/60" message="Nenhuma meta cadastrada." />
         ) : (
           <div className="space-y-3">
             {goals.map((goal) => (

@@ -4,6 +4,7 @@ import { PencilLine } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { BudgetListItem } from "@/features/budgets/types/budget";
 import { buildBudgetsHref } from "@/features/budgets/utils/build-budgets-href";
 import { getBudgetConsumptionStatusLabel } from "@/features/budgets/utils/budget-consumption";
@@ -48,9 +49,7 @@ export function BudgetsList({ budgets, editingBudgetId, competencyMonth }: Budge
       </CardHeader>
       <CardContent>
         {budgets.length === 0 ? (
-          <div className="rounded-[1.5rem] border border-dashed border-border bg-background/60 px-5 py-8 text-center text-sm text-muted-foreground">
-            Nenhum orçamento nesta competência.
-          </div>
+          <EmptyState className="bg-background/60" message="Nenhum orçamento nesta competência." />
         ) : (
           <div className="space-y-3">
             {budgets.map((budget) => (

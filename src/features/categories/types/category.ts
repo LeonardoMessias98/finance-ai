@@ -1,4 +1,4 @@
-export const categoryTypeValues = ["income", "expense", "transfer"] as const;
+export const categoryTypeValues = ["income", "expense"] as const;
 
 export type CategoryType = (typeof categoryTypeValues)[number];
 export type CategoryFieldName = "name" | "type" | "isActive" | "color" | "icon";

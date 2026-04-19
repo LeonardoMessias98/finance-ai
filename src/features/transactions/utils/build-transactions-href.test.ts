@@ -13,13 +13,12 @@ describe("build-transactions-href", () => {
     ).toBe("/transactions?competencyMonth=2026-04&accountId=acc-1&type=expense");
   });
 
-  it("includes modal flags when requested", () => {
+  it("includes the filters modal flag when requested", () => {
     expect(
       buildTransactionsHref({
         competencyMonth: "2026-04",
-        create: true,
         filtersModal: true
       })
-    ).toBe("/transactions?competencyMonth=2026-04&create=1&filters=open");
+    ).toBe("/transactions?competencyMonth=2026-04&filters=open");
   });
 });

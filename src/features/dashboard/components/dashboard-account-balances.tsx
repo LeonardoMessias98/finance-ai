@@ -2,6 +2,7 @@ import { Landmark } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { DashboardAccountBalance } from "@/features/dashboard/types/dashboard-financial-summary";
 import { formatAccountBalanceFromCents, getAccountTypeLabel } from "@/features/accounts/utils/account-formatters";
 
@@ -20,9 +21,10 @@ export function DashboardAccountBalances({ accountBalances }: DashboardAccountBa
       </CardHeader>
       <CardContent>
         {accountBalances.length === 0 ? (
-          <div className="rounded-[1.5rem] border border-dashed border-border bg-background/60 px-5 py-8 text-center text-sm text-muted-foreground">
-            Cadastre contas e transações para ver o saldo consolidado na competência selecionada.
-          </div>
+          <EmptyState
+            className="bg-background/60"
+            message="Cadastre contas e transações para ver o saldo consolidado na competência selecionada."
+          />
         ) : (
           <div className="space-y-3">
             {accountBalances.map((account) => (

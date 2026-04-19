@@ -4,6 +4,7 @@ import { PencilLine } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { Account } from "@/features/accounts/types/account";
 import type { Category } from "@/features/categories/types/category";
 import { TransactionDeleteButton } from "@/features/transactions/components/transaction-delete-button";
@@ -73,12 +74,15 @@ export function TransactionsList({
       </CardHeader>
       <CardContent>
         {transactions.length === 0 ? (
-          <div className="space-y-4 rounded-xl border border-dashed border-border bg-secondary px-5 py-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              {hasAdditionalFilters
-                ? `Nenhuma transação encontrada em ${formattedCompetencyMonth} com os filtros atuais.`
-                : emptyStateMessage}
-            </p>
+          <div className="space-y-4">
+            <EmptyState
+              className="rounded-xl bg-secondary"
+              message={
+                hasAdditionalFilters
+                  ? `Nenhuma transação encontrada em ${formattedCompetencyMonth} com os filtros atuais.`
+                  : emptyStateMessage
+              }
+            />
             {hasAdditionalFilters ? (
               <Button asChild type="button" variant="outline">
                 <Link href={clearSecondaryFiltersHref}>Limpar filtros extras</Link>
@@ -89,9 +93,6 @@ export function TransactionsList({
           <div className="space-y-2">
             {transactions.map((transaction) => {
               const sourceAccount = accountById.get(transaction.accountId);
-              const destinationAccount = transaction.destinationAccountId
-                ? accountById.get(transaction.destinationAccountId)
-                : null;
               const category = transaction.categoryId ? categoryById.get(transaction.categoryId) : null;
               const editHref = buildTransactionsHref({
                 ...filters,
@@ -131,7 +132,6 @@ export function TransactionsList({
                     <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                       <span>{formatTransactionDate(transaction.date)}</span>
                       <TransactionMetaBadge>{sourceAccount?.name ?? "Conta indisponível"}</TransactionMetaBadge>
-                      {destinationAccount ? <TransactionMetaBadge>{destinationAccount.name}</TransactionMetaBadge> : null}
                       <TransactionMetaBadge tone="category">{category?.name ?? "Sem categoria"}</TransactionMetaBadge>
                     </div>
 
@@ -141,7 +141,7 @@ export function TransactionsList({
                   <div className="flex flex-wrap items-start gap-3 lg:justify-end">
                     <div className="min-w-[9rem] text-right">
                       <p className={cn("text-lg font-semibold", getTransactionTypeAmountClassName(transaction.type))}>
-                        {transaction.type === "income" ? "+" : transaction.type === "expense" ? "-" : ""}
+                        {transaction.type === "income" ? "+" : "-"}
                         {formatTransactionAmountFromCents(transaction.amount)}
                       </p>
                       {isInstallmentSeries ? <p className="text-sm text-muted-foreground">Série parcelada</p> : null}

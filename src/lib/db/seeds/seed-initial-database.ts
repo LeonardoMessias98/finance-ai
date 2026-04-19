@@ -231,10 +231,7 @@ async function ensureSampleTransaction(
     date: payload.date,
     competencyMonth: payload.competencyMonth,
     accountId: payload.accountId,
-    ...(payload.categoryId ? { categoryId: payload.categoryId } : { categoryId: { $exists: false } }),
-    ...(payload.destinationAccountId
-      ? { destinationAccountId: payload.destinationAccountId }
-      : { destinationAccountId: { $exists: false } })
+    ...(payload.categoryId ? { categoryId: payload.categoryId } : { categoryId: { $exists: false } })
   }).exec();
 
   if (existingDocument) {
@@ -364,10 +361,6 @@ export async function seedInitialDatabase(options: SeedInitialDatabaseOptions = 
     name: "Conta corrente",
     type: "checking"
   });
-  const savingsAccount = requireAccountReference(accountMap, {
-    name: "Reserva",
-    type: "savings"
-  });
   const salaryCategory = requireCategoryReference(categoryMap, {
     name: "salário",
     type: "income"
@@ -378,7 +371,6 @@ export async function seedInitialDatabase(options: SeedInitialDatabaseOptions = 
   });
   const sampleData = buildOptionalSampleSeedData({
     checkingAccountId: checkingAccount.id,
-    savingsAccountId: savingsAccount.id,
     salaryCategoryId: salaryCategory.id,
     marketCategoryId: marketCategory.id,
     competencyMonth

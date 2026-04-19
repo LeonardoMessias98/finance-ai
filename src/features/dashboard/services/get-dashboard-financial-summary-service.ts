@@ -15,9 +15,7 @@ export async function getDashboardFinancialSummary(input: GetDashboardFinancialS
   const [accounts, categories, transactions] = await Promise.all([
     listAccountsForManagement(),
     listCategoriesForManagement(),
-    listTransactionsForManagement({
-      competencyMonth: input.competencyMonth
-    })
+    listTransactionsForManagement()
   ]);
 
   return buildDashboardFinancialSummary({

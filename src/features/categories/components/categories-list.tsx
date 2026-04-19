@@ -4,9 +4,10 @@ import { PencilLine } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import { CategoryDeleteButton } from "@/features/categories/components/category-delete-button";
-import { CategoryStatusToggleButton } from "@/features/categories/components/category-status-toggle-button";
 import type { Category, CategoryType } from "@/features/categories/types/category";
+import { buildCategoriesHref } from "@/features/categories/utils/build-categories-href";
 import { getCategoryTypeLabel } from "@/features/categories/utils/category-formatters";
 import { groupCategoriesByType } from "@/features/categories/utils/group-categories-by-type";
 import { cn } from "@/lib/utils";
@@ -35,9 +36,7 @@ function CategoryGroup({
       </CardHeader>
       <CardContent>
         {categories.length === 0 ? (
-          <div className="rounded-[1.5rem] border border-dashed border-border bg-background/60 px-5 py-8 text-center text-sm text-muted-foreground">
-            Nenhuma categoria neste tipo.
-          </div>
+          <EmptyState className="bg-background/60" message="Nenhuma categoria neste tipo." />
         ) : (
           <div className="space-y-3">
             {categories.map((category) => (
@@ -67,14 +66,21 @@ function CategoryGroup({
                 </div>
                 <div className="flex flex-wrap items-start gap-3 lg:justify-end">
                   <Button asChild size="sm" variant="outline">
-                    <Link href={`/categories?categoryId=${category.id}${selectedType ? `&type=${selectedType}` : ""}`}>
+                    <Link
+                      href={buildCategoriesHref({
+                        categoryId: category.id,
+                        type: selectedType
+                      })}
+                    >
                       <PencilLine className="h-4 w-4" />
                       Editar
                     </Link>
                   </Button>
                   <CategoryDeleteButton
                     categoryId={category.id}
-                    redirectHref={selectedType ? `/categories?type=${selectedType}` : "/categories"}
+                    redirectHref={buildCategoriesHref({
+                      type: selectedType
+                    })}
                   />
                 </div>
               </div>
@@ -89,7 +95,7 @@ function CategoryGroup({
 export function CategoriesList({ categories, editingCategoryId, selectedType }: CategoriesListProps) {
   const groupedCategories = groupCategoriesByType(categories);
 
-  const typesToRender: CategoryType[] = selectedType ? [selectedType] : ["income", "expense", "transfer"];
+  const typesToRender: CategoryType[] = selectedType ? [selectedType] : ["income", "expense"];
 
   return (
     <div className="space-y-6">

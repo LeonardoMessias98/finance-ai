@@ -8,7 +8,6 @@ import { getCurrentCompetencyMonth, isCompetencyMonth } from "@/lib/dates/compet
 type TransactionsRoutePageProps = {
   searchParams?: Promise<{
     transactionId?: string | string[];
-    create?: string | string[];
     filters?: string | string[];
     competencyMonth?: string | string[];
     accountId?: string | string[];
@@ -46,13 +45,11 @@ export default async function TransactionsRoutePage({ searchParams }: Transactio
     typeof resolvedSearchParams.type === "string" && isTransactionType(resolvedSearchParams.type)
       ? resolvedSearchParams.type
       : undefined;
-  const isCreateModalOpen = isTruthySearchParam(resolvedSearchParams.create);
   const isFiltersModalOpen = isTruthySearchParam(resolvedSearchParams.filters);
 
   return (
     <TransactionsPage
       editingTransactionId={editingTransactionId}
-      isCreateModalOpen={isCreateModalOpen}
       isFiltersModalOpen={isFiltersModalOpen}
       filters={{
         competencyMonth,

@@ -71,14 +71,14 @@ const transactions: Transaction[] = [
   {
     id: "transaction-3",
     userId: "user-1",
-    description: "Transferência para reserva",
+    description: "Freela abril",
     amount: 2_000,
-    type: "transfer",
+    type: "income",
     date: new Date("2026-04-12T12:00:00.000Z"),
     competencyMonth: "2026-04",
-    accountId: "account-1",
-    destinationAccountId: "account-2",
-    status: "paid",
+    categoryId: "category-income",
+    accountId: "account-2",
+    status: "received",
     isRecurring: false
   },
   {
@@ -118,15 +118,15 @@ describe("buildDashboardFinancialSummary", () => {
       competencyMonth: "2026-04"
     });
 
-    expect(summary.totalCurrentBalance).toBe(17_000);
-    expect(summary.monthlyIncome).toBe(3_000);
+    expect(summary.totalCurrentBalance).toBe(19_000);
+    expect(summary.monthlyIncome).toBe(5_000);
     expect(summary.monthlyExpense).toBe(1_000);
-    expect(summary.monthlyResult).toBe(2_000);
+    expect(summary.monthlyResult).toBe(4_000);
 
     expect(summary.accountBalances).toEqual([
       expect.objectContaining({
         accountId: "account-1",
-        currentBalance: 10_000
+        currentBalance: 12_000
       }),
       expect.objectContaining({
         accountId: "account-2",
@@ -137,8 +137,8 @@ describe("buildDashboardFinancialSummary", () => {
     expect(summary.incomeTotalsByCategory).toEqual([
       expect.objectContaining({
         categoryId: "category-income",
-        totalAmount: 3_000,
-        transactionCount: 1
+        totalAmount: 5_000,
+        transactionCount: 2
       })
     ]);
 
@@ -169,12 +169,12 @@ describe("buildDashboardFinancialSummary", () => {
       latestTransactionsType: "income"
     });
 
-    expect(summary.monthlyIncome).toBe(3_000);
+    expect(summary.monthlyIncome).toBe(5_000);
     expect(summary.monthlyExpense).toBe(1_000);
-    expect(summary.latestTransactions).toHaveLength(1);
+    expect(summary.latestTransactions).toHaveLength(2);
     expect(summary.latestTransactions[0]).toEqual(
       expect.objectContaining({
-        id: "transaction-1",
+        id: "transaction-3",
         type: "income"
       })
     );

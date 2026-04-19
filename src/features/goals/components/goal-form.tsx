@@ -7,51 +7,37 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { LoaderCircle } from "lucide-react";
 import { useForm } from "react-hook-form";
 
+import { FieldErrorMessage } from "@/components/forms/field-error-message";
+import { FormCardShell } from "@/components/forms/form-card-shell";
+import { FormFeedbackMessage } from "@/components/forms/form-feedback-message";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createGoalAction } from "@/features/goals/actions/create-goal-action";
+import { getGoalFormDefaultValues } from "@/features/goals/components/goal-form.helpers";
 import { updateGoalAction } from "@/features/goals/actions/update-goal-action";
 import { goalFormSchema, type GoalFormValues } from "@/features/goals/schemas/goal-schema";
 import type { Goal } from "@/features/goals/types/goal";
-import { cn } from "@/lib/utils";
+import { applyFormActionFieldErrors, type FormActionFeedback } from "@/lib/forms/form-action-feedback";
 
 type GoalFormProps = {
   goal?: Goal | null;
+  closeOnSuccess?: boolean;
   returnHref: string;
+  showCard?: boolean;
 };
 
-function formatDateForInput(date: Date): string {
-  return date.toISOString().slice(0, 10);
-}
-
-function getDefaultValues(goal?: Goal | null): GoalFormValues {
-  return {
-    name: goal?.name ?? "",
-    targetAmount: goal ? goal.targetAmount / 100 : 0,
-    currentAmount: goal ? goal.currentAmount / 100 : 0,
-    targetDate: goal?.targetDate ? formatDateForInput(goal.targetDate) : ""
-  };
-}
-
-function FieldErrorMessage({ message }: { message?: string }) {
-  if (!message) {
-    return null;
-  }
-
-  return <p className="text-sm text-destructive">{message}</p>;
-}
-
-export function GoalForm({ goal, returnHref }: GoalFormProps) {
+export function GoalForm({
+  goal,
+  closeOnSuccess = false,
+  returnHref,
+  showCard = true
+}: GoalFormProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [feedback, setFeedback] = useState<{
-    status: "success" | "error";
-    message: string;
-  } | null>(null);
+  const [feedback, setFeedback] = useState<FormActionFeedback | null>(null);
 
-  const defaultValues = useMemo(() => getDefaultValues(goal), [goal]);
+  const defaultValues = useMemo(() => getGoalFormDefaultValues(goal), [goal]);
 
   const form = useForm<GoalFormValues>({
     resolver: zodResolver(goalFormSchema),
@@ -82,19 +68,7 @@ export function GoalForm({ goal, returnHref }: GoalFormProps) {
           status: "error",
           message: result.message
         });
-
-        if (result.fieldErrors) {
-          Object.entries(result.fieldErrors).forEach(([fieldName, messages]) => {
-            if (!messages || messages.length === 0) {
-              return;
-            }
-
-            form.setError(fieldName as keyof GoalFormValues, {
-              type: "server",
-              message: messages[0]
-            });
-          });
-        }
+        applyFormActionFieldErrors(form, result);
 
         return;
       }
@@ -104,108 +78,98 @@ export function GoalForm({ goal, returnHref }: GoalFormProps) {
         message: result.message
       });
 
-      if (isEditing) {
+      if (isEditing || closeOnSuccess) {
         router.push(returnHref);
       } else {
-        form.reset(getDefaultValues());
+        form.reset(getGoalFormDefaultValues());
       }
 
       router.refresh();
     });
   });
 
+  const formContent = (
+    <form className="space-y-5" onSubmit={handleSubmit}>
+      <div className="space-y-2">
+        <Label htmlFor="name">Nome</Label>
+        <Input
+          disabled={isPending}
+          id="name"
+          placeholder="Ex.: Reserva de emergência, Viagem, Entrada do imóvel"
+          {...form.register("name")}
+        />
+        <FieldErrorMessage message={form.formState.errors.name?.message} />
+      </div>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="targetAmount">Valor alvo</Label>
+          <Input
+            disabled={isPending}
+            id="targetAmount"
+            inputMode="decimal"
+            step="0.01"
+            type="number"
+            {...form.register("targetAmount", {
+              valueAsNumber: true
+            })}
+          />
+          <FieldErrorMessage message={form.formState.errors.targetAmount?.message} />
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="currentAmount">Valor acumulado</Label>
+          <Input
+            disabled={isPending}
+            id="currentAmount"
+            inputMode="decimal"
+            step="0.01"
+            type="number"
+            {...form.register("currentAmount", {
+              valueAsNumber: true
+            })}
+          />
+          <FieldErrorMessage message={form.formState.errors.currentAmount?.message} />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="targetDate">Prazo</Label>
+        <Input disabled={isPending} id="targetDate" type="date" {...form.register("targetDate")} />
+        <FieldErrorMessage message={form.formState.errors.targetDate?.message} />
+      </div>
+
+      <FormFeedbackMessage message={feedback?.message} status={feedback?.status} className="rounded-2xl" />
+
+      <div className="flex flex-wrap gap-3">
+        <Button disabled={isPending} type="submit">
+          {isPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
+          {isEditing ? "Salvar" : "Criar meta"}
+        </Button>
+        {isEditing ? (
+          <Button asChild type="button" variant="outline">
+            <Link href={returnHref}>Cancelar</Link>
+          </Button>
+        ) : (
+          <Button
+            disabled={isPending}
+            onClick={() => {
+              form.reset(getGoalFormDefaultValues());
+              setFeedback(null);
+            }}
+            type="button"
+            variant="outline"
+          >
+            Limpar
+          </Button>
+        )}
+      </div>
+    </form>
+  );
+
   return (
-    <Card className="border-primary/10 bg-card/95">
-      <CardHeader>
-        <CardTitle className="text-xl">{isEditing ? "Editar meta" : "Nova meta"}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form className="space-y-5" onSubmit={handleSubmit}>
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome</Label>
-            <Input
-              disabled={isPending}
-              id="name"
-              placeholder="Ex.: Reserva de emergência, Viagem, Entrada do imóvel"
-              {...form.register("name")}
-            />
-            <FieldErrorMessage message={form.formState.errors.name?.message} />
-          </div>
-
-          <div className="grid gap-5 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="targetAmount">Valor alvo</Label>
-              <Input
-                disabled={isPending}
-                id="targetAmount"
-                inputMode="decimal"
-                step="0.01"
-                type="number"
-                {...form.register("targetAmount", {
-                  valueAsNumber: true
-                })}
-              />
-              <FieldErrorMessage message={form.formState.errors.targetAmount?.message} />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="currentAmount">Valor acumulado</Label>
-              <Input
-                disabled={isPending}
-                id="currentAmount"
-                inputMode="decimal"
-                step="0.01"
-                type="number"
-                {...form.register("currentAmount", {
-                  valueAsNumber: true
-                })}
-              />
-              <FieldErrorMessage message={form.formState.errors.currentAmount?.message} />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="targetDate">Prazo</Label>
-            <Input disabled={isPending} id="targetDate" type="date" {...form.register("targetDate")} />
-            <FieldErrorMessage message={form.formState.errors.targetDate?.message} />
-          </div>
-
-          {feedback ? (
-            <p
-              className={cn(
-                "rounded-2xl px-4 py-3 text-sm",
-                feedback.status === "success" ? "bg-primary/10 text-primary" : "bg-destructive/10 text-destructive"
-              )}
-            >
-              {feedback.message}
-            </p>
-          ) : null}
-
-          <div className="flex flex-wrap gap-3">
-            <Button disabled={isPending} type="submit">
-              {isPending ? <LoaderCircle className="h-4 w-4 animate-spin" /> : null}
-              {isEditing ? "Salvar" : "Criar meta"}
-            </Button>
-            {isEditing ? (
-              <Button asChild type="button" variant="outline">
-                <Link href={returnHref}>Cancelar</Link>
-              </Button>
-            ) : (
-              <Button
-                disabled={isPending}
-                onClick={() => {
-                  form.reset(getDefaultValues());
-                  setFeedback(null);
-                }}
-                type="button"
-                variant="outline"
-              >
-                Limpar
-              </Button>
-            )}
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+    <FormCardShell showCard={showCard} title={isEditing ? "Editar meta" : "Nova meta"}>
+      {formContent}
+    </FormCardShell>
   );
 }

@@ -6,8 +6,7 @@ import type {
 
 const transactionTypeLabelMap: Record<TransactionType, string> = {
   income: "Receita",
-  expense: "Despesa",
-  transfer: "Transferência"
+  expense: "Despesa"
 };
 
 const transactionStatusLabelMap: Record<TransactionStatus, string> = {
@@ -19,8 +18,7 @@ const transactionStatusLabelMap: Record<TransactionStatus, string> = {
 
 const defaultStatusByTransactionType: Record<TransactionType, TransactionStatus> = {
   income: "received",
-  expense: "paid",
-  transfer: "paid"
+  expense: "paid"
 };
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
@@ -62,11 +60,7 @@ export function getTransactionTypeDotClassName(transactionType: TransactionType)
     return "bg-green-500";
   }
 
-  if (transactionType === "expense") {
-    return "bg-destructive";
-  }
-
-  return "bg-primary";
+  return "bg-destructive";
 }
 
 export function getTransactionTypeAmountClassName(transactionType: TransactionType): string {
@@ -74,11 +68,7 @@ export function getTransactionTypeAmountClassName(transactionType: TransactionTy
     return "text-income";
   }
 
-  if (transactionType === "expense") {
-    return "text-destructive";
-  }
-
-  return "text-foreground";
+  return "text-destructive";
 }
 
 export function formatTransactionAmountFromCents(amountInCents: number): string {

@@ -181,7 +181,6 @@ Dados criados por padrão:
 - contas padrão
 - categorias de receita
 - categorias de despesa
-- categoria de transferência interna
 
 Dados opcionais com `--with-sample-data`:
 

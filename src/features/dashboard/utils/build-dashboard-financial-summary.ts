@@ -1,6 +1,7 @@
 import type { Account } from "@/features/accounts/types/account";
 import type { Category } from "@/features/categories/types/category";
 import type { DashboardFinancialSummary, DashboardCategoryTotal } from "@/features/dashboard/types/dashboard-financial-summary";
+import { buildDashboardAnalytics, createEmptyDashboardAnalytics } from "@/features/dashboard/utils/build-dashboard-analytics";
 import type { Transaction, TransactionType } from "@/features/transactions/types/transaction";
 
 const latestTransactionsLimit = 6;
@@ -45,19 +46,6 @@ function calculateAccountBalances(accounts: Account[], transactions: Transaction
       balanceByAccountId.set(
         transaction.accountId,
         (balanceByAccountId.get(transaction.accountId) ?? 0) - transaction.amount
-      );
-      continue;
-    }
-
-    balanceByAccountId.set(
-      transaction.accountId,
-      (balanceByAccountId.get(transaction.accountId) ?? 0) - transaction.amount
-    );
-
-    if (transaction.destinationAccountId) {
-      balanceByAccountId.set(
-        transaction.destinationAccountId,
-        (balanceByAccountId.get(transaction.destinationAccountId) ?? 0) + transaction.amount
       );
     }
   }
@@ -118,7 +106,8 @@ export function createEmptyDashboardFinancialSummary(competencyMonth: string): D
     accountBalances: [],
     incomeTotalsByCategory: [],
     expenseTotalsByCategory: [],
-    latestTransactions: []
+    latestTransactions: [],
+    analytics: createEmptyDashboardAnalytics(competencyMonth)
   };
 }
 
@@ -133,9 +122,11 @@ export function buildDashboardFinancialSummary(input: {
     input.transactions.filter((transaction) => transaction.competencyMonth === input.competencyMonth)
   );
   const accountBalances = calculateAccountBalances(input.accounts, monthlyTransactions);
+  const appliedTransactions = input.transactions.filter(isAppliedTransaction);
   const appliedMonthlyTransactions = monthlyTransactions.filter(isAppliedTransaction);
   const monthlyIncomeTransactions = appliedMonthlyTransactions.filter((transaction) => transaction.type === "income");
   const monthlyExpenseTransactions = appliedMonthlyTransactions.filter((transaction) => transaction.type === "expense");
+  const expenseTotalsByCategory = aggregateCategoryTotals(monthlyExpenseTransactions, input.categories);
   const latestTransactions = (input.latestTransactionsType
     ? monthlyTransactions.filter((transaction) => transaction.type === input.latestTransactionsType)
     : monthlyTransactions
@@ -153,7 +144,7 @@ export function buildDashboardFinancialSummary(input: {
       monthlyExpenseTransactions.reduce((sum, transaction) => sum + transaction.amount, 0),
     accountBalances,
     incomeTotalsByCategory: aggregateCategoryTotals(monthlyIncomeTransactions, input.categories),
-    expenseTotalsByCategory: aggregateCategoryTotals(monthlyExpenseTransactions, input.categories),
+    expenseTotalsByCategory,
     latestTransactions: latestTransactions.map((transaction) => ({
       id: transaction.id,
       description: transaction.description,
@@ -162,10 +153,13 @@ export function buildDashboardFinancialSummary(input: {
       status: transaction.status,
       date: transaction.date,
       accountName: accountById.get(transaction.accountId)?.name ?? "Conta indisponível",
-      destinationAccountName: transaction.destinationAccountId
-        ? (accountById.get(transaction.destinationAccountId)?.name ?? "Conta indisponível")
-        : undefined,
       categoryName: transaction.categoryId ? categoryById.get(transaction.categoryId)?.name : undefined
-    }))
+    })),
+    analytics: buildDashboardAnalytics({
+      competencyMonth: input.competencyMonth,
+      allAppliedTransactions: appliedTransactions,
+      monthlyExpenseTransactions,
+      expenseTotalsByCategory
+    })
   };
 }

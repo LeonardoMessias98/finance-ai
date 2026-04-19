@@ -6,7 +6,6 @@ type BuildTransactionsHrefInput = {
   accountId?: string;
   categoryId?: string;
   type?: TransactionType;
-  create?: boolean;
   filtersModal?: boolean;
 };
 
@@ -31,10 +30,6 @@ export function buildTransactionsHref(input: BuildTransactionsHrefInput = {}): s
 
   if (input.type) {
     searchParams.set("type", input.type);
-  }
-
-  if (input.create) {
-    searchParams.set("create", "1");
   }
 
   if (input.filtersModal) {

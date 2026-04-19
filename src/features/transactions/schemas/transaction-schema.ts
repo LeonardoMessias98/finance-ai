@@ -61,7 +61,6 @@ const transactionFieldsSchema = z.object({
   competencyMonth: z.string().regex(competencyMonthRegex, "Informe a competência no formato YYYY-MM."),
   categoryId: objectIdStringSchema.optional(),
   accountId: objectIdStringSchema,
-  destinationAccountId: objectIdStringSchema.optional(),
   notes: z.string().trim().max(500, "Use no máximo 500 caracteres nas observações.").optional(),
   status: z.enum(transactionStatusValues, {
     errorMap: () => ({
@@ -75,8 +74,7 @@ const transactionFieldsSchema = z.object({
 
 export const statusByTransactionType: Record<TransactionType, readonly TransactionStatus[]> = {
   income: ["planned", "received", "overdue"],
-  expense: ["planned", "paid", "overdue"],
-  transfer: ["planned", "paid", "overdue"]
+  expense: ["planned", "paid", "overdue"]
 };
 
 function validateTransactionRules(
@@ -85,7 +83,6 @@ function validateTransactionRules(
     status: TransactionStatus;
     categoryId?: string;
     accountId: string;
-    destinationAccountId?: string;
     installment?: {
       current: number;
       total: number;
@@ -104,38 +101,12 @@ function validateTransactionRules(
     });
   }
 
-  if (value.type === "transfer") {
-    if (!value.destinationAccountId) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["destinationAccountId"],
-        message: "Transferências exigem uma conta de destino."
-      });
-    }
-
-    if (value.destinationAccountId && value.destinationAccountId === value.accountId) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["destinationAccountId"],
-        message: "A conta de destino deve ser diferente da conta de origem."
-      });
-    }
-  } else {
-    if (!value.categoryId) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["categoryId"],
-        message: "Receitas e despesas exigem uma categoria."
-      });
-    }
-
-    if (value.destinationAccountId) {
-      context.addIssue({
-        code: z.ZodIssueCode.custom,
-        path: ["destinationAccountId"],
-        message: "Apenas transferências podem definir conta de destino."
-      });
-    }
+  if (!value.categoryId) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["categoryId"],
+      message: "Receitas e despesas exigem uma categoria."
+    });
   }
 
   if (value.installment && value.installment.total > 1) {
@@ -204,10 +175,6 @@ export const transactionFormSchema = z
       .trim()
       .refine(isValidOptionalObjectId, "Selecione uma categoria válida."),
     accountId: objectIdStringSchema,
-    destinationAccountId: z
-      .string()
-      .trim()
-      .refine(isValidOptionalObjectId, "Selecione uma conta de destino válida."),
     notes: z.string().trim().max(500, "Use no máximo 500 caracteres nas observações."),
     status: z.enum(transactionStatusValues, {
       errorMap: () => ({
@@ -222,8 +189,7 @@ export const transactionFormSchema = z
         type: value.type,
         status: value.status,
         categoryId: value.categoryId || undefined,
-        accountId: value.accountId,
-        destinationAccountId: value.destinationAccountId || undefined
+        accountId: value.accountId
       },
       context
     );
@@ -250,7 +216,6 @@ export type TransactionFormValues = {
   installmentCount: number;
   categoryId: string;
   accountId: string;
-  destinationAccountId: string;
   notes: string;
   status: TransactionStatus;
   isRecurring: boolean;

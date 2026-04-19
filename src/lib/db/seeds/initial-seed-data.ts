@@ -131,19 +131,11 @@ export const initialCategorySeedData = [
     isActive: true,
     color: "#7e22ce",
     icon: "graduation-cap"
-  },
-  {
-    name: "transferência interna",
-    type: "transfer",
-    isActive: true,
-    color: "#0f766e",
-    icon: "arrow-right-left"
   }
 ] as const satisfies readonly Omit<CreateCategoryInput, "userId">[];
 
 export type OptionalSampleSeedContext = {
   checkingAccountId: string;
-  savingsAccountId: string;
   salaryCategoryId: string;
   marketCategoryId: string;
   competencyMonth: string;
@@ -193,17 +185,6 @@ export function buildOptionalSampleSeedData(context: OptionalSampleSeedContext):
         competencyMonth: context.competencyMonth,
         categoryId: context.marketCategoryId,
         accountId: context.checkingAccountId,
-        status: "paid",
-        isRecurring: false
-      },
-      {
-        description: "Transferência para reserva de exemplo",
-        amount: 50_000,
-        type: "transfer",
-        date: buildMonthDate(context.competencyMonth, 15),
-        competencyMonth: context.competencyMonth,
-        accountId: context.checkingAccountId,
-        destinationAccountId: context.savingsAccountId,
         status: "paid",
         isRecurring: false
       }

@@ -1,4 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { EmptyState } from "@/components/ui/empty-state";
 import type { DashboardCategoryTotal } from "@/features/dashboard/types/dashboard-financial-summary";
 import { formatAccountBalanceFromCents } from "@/features/accounts/utils/account-formatters";
 
@@ -23,9 +24,7 @@ export function DashboardCategoryBreakdown({
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
-          <div className="rounded-[1.5rem] border border-dashed border-border bg-background/60 px-5 py-8 text-center text-sm text-muted-foreground">
-            {emptyMessage}
-          </div>
+          <EmptyState className="bg-background/60" message={emptyMessage} />
         ) : (
           <div className="space-y-3">
             {items.map((item) => (

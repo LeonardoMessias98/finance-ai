@@ -139,14 +139,7 @@ export async function countTransactionsByAccountId(accountId: string, userId: st
 
   return TransactionModel.countDocuments({
     userId,
-    $or: [
-      {
-        accountId
-      },
-      {
-        destinationAccountId: accountId
-      }
-    ]
+    accountId
   }).exec();
 }
 

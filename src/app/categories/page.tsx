@@ -3,10 +3,12 @@ import { redirect } from "next/navigation";
 import { CategoriesPage } from "@/features/categories/components/categories-page";
 import { categoryTypeValues, type CategoryType } from "@/features/categories/types/category";
 import { getOptionalAuthenticatedAppUser } from "@/lib/auth/session";
+import { isTruthySearchParam } from "@/lib/search-params";
 
 type CategoriesRoutePageProps = {
   searchParams?: Promise<{
     categoryId?: string | string[];
+    create?: string | string[];
     type?: string | string[];
   }>;
 };
@@ -29,6 +31,13 @@ export default async function CategoriesRoutePage({ searchParams }: CategoriesRo
     typeof resolvedSearchParams.type === "string" && isCategoryType(resolvedSearchParams.type)
       ? resolvedSearchParams.type
       : undefined;
+  const isCreateModalOpen = isTruthySearchParam(resolvedSearchParams.create);
 
-  return <CategoriesPage editingCategoryId={editingCategoryId} selectedType={selectedType} />;
+  return (
+    <CategoriesPage
+      editingCategoryId={editingCategoryId}
+      isCreateModalOpen={isCreateModalOpen}
+      selectedType={selectedType}
+    />
+  );
 }
