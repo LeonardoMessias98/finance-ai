@@ -6,13 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
 import { AccountDeleteButton } from "@/features/accounts/components/account-delete-button";
-import type { Account } from "@/features/accounts/types/account";
+import type { AccountWithCurrentBalance } from "@/features/accounts/types/account";
 import { buildAccountsHref } from "@/features/accounts/utils/build-accounts-href";
 import { formatAccountBalanceFromCents, getAccountTypeLabel } from "@/features/accounts/utils/account-formatters";
 import { cn } from "@/lib/utils";
 
 type AccountsListProps = {
-  accounts: Account[];
+  accounts: AccountWithCurrentBalance[];
   editingAccountId?: string;
 };
 
@@ -53,7 +53,7 @@ export function AccountsList({ accounts, editingAccountId }: AccountsListProps) 
                       <Badge variant="outline">{getAccountTypeLabel(account.type)}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Saldo inicial {formatAccountBalanceFromCents(account.initialBalance)}
+                      Saldo atual {formatAccountBalanceFromCents(account.currentBalance)}
                     </p>
                   </div>
                 </div>

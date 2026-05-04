@@ -179,4 +179,480 @@ describe("buildDashboardFinancialSummary", () => {
       })
     );
   });
+
+  it("includes debit accounts in the available balance", () => {
+    const summary = buildDashboardFinancialSummary({
+      accounts: [
+        {
+          id: "debit-account",
+          userId: "user-1",
+          name: "Conta débito",
+          type: "debit",
+          initialBalance: 10_000,
+          isActive: true
+        }
+      ],
+      categories,
+      transactions: [
+        {
+          id: "income-1",
+          userId: "user-1",
+          description: "Entrada",
+          amount: 5_000,
+          type: "income",
+          date: new Date("2026-04-10T12:00:00.000Z"),
+          competencyMonth: "2026-04",
+          categoryId: "category-income",
+          accountId: "debit-account",
+          status: "received",
+          isRecurring: false
+        },
+        {
+          id: "expense-1",
+          userId: "user-1",
+          description: "Saída",
+          amount: 2_000,
+          type: "expense",
+          date: new Date("2026-04-11T12:00:00.000Z"),
+          competencyMonth: "2026-04",
+          categoryId: "category-expense",
+          accountId: "debit-account",
+          status: "paid",
+          isRecurring: false
+        }
+      ],
+      competencyMonth: "2026-04"
+    });
+
+    expect(summary.totalCurrentBalance).toBe(13_000);
+  });
+
+  it("reduces available balance with paid expense in debit account", () => {
+    const summary = buildDashboardFinancialSummary({
+      accounts: [
+        {
+          id: "debit-account",
+          userId: "user-1",
+          name: "Conta débito",
+          type: "debit",
+          initialBalance: 10_000,
+          isActive: true
+        }
+      ],
+      categories,
+      transactions: [
+        {
+          id: "debit-expense",
+          userId: "user-1",
+          description: "Despesa no débito",
+          amount: 3_000,
+          type: "expense",
+          date: new Date("2026-04-11T12:00:00.000Z"),
+          competencyMonth: "2026-04",
+          categoryId: "category-expense",
+          accountId: "debit-account",
+          status: "paid",
+          isRecurring: false
+        }
+      ],
+      competencyMonth: "2026-04"
+    });
+
+    expect(summary.totalCurrentBalance).toBe(7_000);
+    expect(summary.accountBalances).toEqual([
+      expect.objectContaining({
+        accountId: "debit-account",
+        currentBalance: 7_000
+      })
+    ]);
+  });
+
+  it("treats legacy non-credit accounts as debit balance accounts", () => {
+    const summary = buildDashboardFinancialSummary({
+      accounts: [
+        {
+          id: "checking-account",
+          userId: "user-1",
+          name: "Conta antiga",
+          type: "checking",
+          initialBalance: 10_000,
+          isActive: true
+        },
+        {
+          id: "investment-account",
+          userId: "user-1",
+          name: "Investimento antigo",
+          type: "investment",
+          initialBalance: 20_000,
+          isActive: true
+        }
+      ],
+      categories,
+      transactions: [],
+      competencyMonth: "2026-04"
+    });
+
+    expect(summary.totalCurrentBalance).toBe(30_000);
+    expect(summary.accountBalances.map((account) => account.accountId)).toEqual([
+      "checking-account",
+      "investment-account"
+    ]);
+  });
+
+  it("does not include credit and legacy credit_card accounts in available balance", () => {
+    const summary = buildDashboardFinancialSummary({
+      accounts: [
+        {
+          id: "credit-account",
+          userId: "user-1",
+          name: "Cartão novo",
+          type: "credit",
+          initialBalance: 50_000,
+          isActive: true
+        },
+        {
+          id: "legacy-credit-account",
+          userId: "user-1",
+          name: "Cartão antigo",
+          type: "credit_card",
+          initialBalance: 30_000,
+          isActive: true
+        }
+      ],
+      categories,
+      transactions: [],
+      competencyMonth: "2026-04"
+    });
+
+    expect(summary.totalCurrentBalance).toBe(0);
+    expect(summary.accountBalances).toEqual([]);
+    expect(summary.creditAccountSummaries.map((account) => account.accountId)).toEqual([
+      "legacy-credit-account",
+      "credit-account"
+    ]);
+  });
+
+  it("keeps credit expenses out of the home available balance", () => {
+    const summary = buildDashboardFinancialSummary({
+      accounts: [
+        {
+          id: "debit-account",
+          userId: "user-1",
+          name: "Conta débito",
+          type: "debit",
+          initialBalance: 10_000,
+          isActive: true
+        },
+        {
+          id: "credit-account",
+          userId: "user-1",
+          name: "Cartão",
+          type: "credit",
+          initialBalance: 0,
+          isActive: true
+        }
+      ],
+      categories,
+      transactions: [
+        {
+          id: "credit-expense",
+          userId: "user-1",
+          description: "Compra no cartão",
+          amount: 4_000,
+          type: "expense",
+          date: new Date("2026-04-10T12:00:00.000Z"),
+          competencyMonth: "2026-04",
+          categoryId: "category-expense",
+          accountId: "credit-account",
+          status: "paid",
+          isRecurring: false
+        },
+        {
+          id: "credit-payment",
+          userId: "user-1",
+          description: "Pagamento do cartão",
+          amount: 1_500,
+          type: "expense",
+          date: new Date("2026-04-12T12:00:00.000Z"),
+          competencyMonth: "2026-04",
+          categoryId: "category-expense",
+          accountId: "debit-account",
+          paymentForCreditAccountId: "credit-account",
+          status: "paid",
+          isRecurring: false
+        }
+      ],
+      competencyMonth: "2026-04"
+    });
+
+    expect(summary.totalCurrentBalance).toBe(8_500);
+    expect(summary.monthlyExpense).toBe(1_500);
+    expect(summary.monthlyResult).toBe(-1_500);
+    expect(summary.creditAccountSummaries).toEqual([
+      expect.objectContaining({
+        accountId: "credit-account",
+        spentAmount: 4_000,
+        paidAmount: 1_500,
+        openAmount: 2_500
+      })
+    ]);
+  });
+
+  it("does not reduce available balance or monthly expense with a credit expense", () => {
+    const summary = buildDashboardFinancialSummary({
+      accounts: [
+        {
+          id: "debit-account",
+          userId: "user-1",
+          name: "Conta débito",
+          type: "debit",
+          initialBalance: 10_000,
+          isActive: true
+        },
+        {
+          id: "credit-account",
+          userId: "user-1",
+          name: "Cartão",
+          type: "credit",
+          initialBalance: 0,
+          isActive: true
+        }
+      ],
+      categories,
+      transactions: [
+        {
+          id: "credit-expense",
+          userId: "user-1",
+          description: "Compra no cartão",
+          amount: 4_000,
+          type: "expense",
+          date: new Date("2026-04-10T12:00:00.000Z"),
+          competencyMonth: "2026-04",
+          categoryId: "category-expense",
+          accountId: "credit-account",
+          status: "paid",
+          isRecurring: false
+        }
+      ],
+      competencyMonth: "2026-04"
+    });
+
+    expect(summary.totalCurrentBalance).toBe(10_000);
+    expect(summary.monthlyExpense).toBe(0);
+    expect(summary.monthlyResult).toBe(0);
+    expect(summary.accountBalances).toEqual([
+      expect.objectContaining({
+        accountId: "debit-account",
+        currentBalance: 10_000
+      })
+    ]);
+    expect(summary.creditAccountSummaries).toEqual([
+      expect.objectContaining({
+        accountId: "credit-account",
+        spentAmount: 4_000,
+        openAmount: 4_000
+      })
+    ]);
+  });
+
+  it("reduces available balance when credit invoice payment leaves a debit account", () => {
+    const summary = buildDashboardFinancialSummary({
+      accounts: [
+        {
+          id: "debit-account",
+          userId: "user-1",
+          name: "Conta débito",
+          type: "debit",
+          initialBalance: 10_000,
+          isActive: true
+        },
+        {
+          id: "credit-account",
+          userId: "user-1",
+          name: "Cartão",
+          type: "credit",
+          initialBalance: 0,
+          isActive: true
+        }
+      ],
+      categories,
+      transactions: [
+        {
+          id: "credit-payment",
+          userId: "user-1",
+          description: "Pagamento da fatura",
+          amount: 3_000,
+          type: "expense",
+          date: new Date("2026-04-12T12:00:00.000Z"),
+          competencyMonth: "2026-04",
+          categoryId: "category-expense",
+          accountId: "debit-account",
+          paymentForCreditAccountId: "credit-account",
+          status: "paid",
+          isRecurring: false
+        }
+      ],
+      competencyMonth: "2026-04"
+    });
+
+    expect(summary.totalCurrentBalance).toBe(7_000);
+    expect(summary.accountBalances).toEqual([
+      expect.objectContaining({
+        accountId: "debit-account",
+        currentBalance: 7_000
+      })
+    ]);
+    expect(summary.creditAccountSummaries).toEqual([
+      expect.objectContaining({
+        accountId: "credit-account",
+        paidAmount: 3_000
+      })
+    ]);
+  });
+
+  it("keeps legacy credit_card expenses out of available balance", () => {
+    const summary = buildDashboardFinancialSummary({
+      accounts: [
+        {
+          id: "debit-account",
+          userId: "user-1",
+          name: "Conta débito",
+          type: "debit",
+          initialBalance: 10_000,
+          isActive: true
+        },
+        {
+          id: "legacy-credit-account",
+          userId: "user-1",
+          name: "Cartão antigo",
+          type: "credit_card",
+          initialBalance: 50_000,
+          isActive: true
+        }
+      ],
+      categories,
+      transactions: [
+        {
+          id: "legacy-credit-expense",
+          userId: "user-1",
+          description: "Compra no cartão antigo",
+          amount: 4_000,
+          type: "expense",
+          date: new Date("2026-04-10T12:00:00.000Z"),
+          competencyMonth: "2026-04",
+          categoryId: "category-expense",
+          accountId: "legacy-credit-account",
+          status: "paid",
+          isRecurring: false
+        }
+      ],
+      competencyMonth: "2026-04"
+    });
+
+    expect(summary.totalCurrentBalance).toBe(10_000);
+    expect(summary.monthlyExpense).toBe(0);
+    expect(summary.monthlyResult).toBe(0);
+    expect(summary.accountBalances.map((account) => account.accountId)).toEqual(["debit-account"]);
+    expect(summary.creditAccountSummaries).toEqual([
+      expect.objectContaining({
+        accountId: "legacy-credit-account",
+        spentAmount: 4_000,
+        openAmount: 4_000
+      })
+    ]);
+  });
+
+  it("keeps credit transactions visible in latest transactions without changing available balance", () => {
+    const summary = buildDashboardFinancialSummary({
+      accounts: [
+        {
+          id: "debit-account",
+          userId: "user-1",
+          name: "Conta débito",
+          type: "debit",
+          initialBalance: 10_000,
+          isActive: true
+        },
+        {
+          id: "credit-account",
+          userId: "user-1",
+          name: "Cartão",
+          type: "credit",
+          initialBalance: 0,
+          isActive: true
+        },
+        {
+          id: "legacy-credit-account",
+          userId: "user-1",
+          name: "Cartão antigo",
+          type: "credit_card",
+          initialBalance: 0,
+          isActive: true
+        }
+      ],
+      categories,
+      transactions: [
+        {
+          id: "debit-expense",
+          userId: "user-1",
+          description: "Mercado débito",
+          amount: 2_000,
+          type: "expense",
+          date: new Date("2026-04-10T12:00:00.000Z"),
+          competencyMonth: "2026-04",
+          categoryId: "category-expense",
+          accountId: "debit-account",
+          status: "paid",
+          isRecurring: false
+        },
+        {
+          id: "credit-expense",
+          userId: "user-1",
+          description: "Compra crédito",
+          amount: 4_000,
+          type: "expense",
+          date: new Date("2026-04-11T12:00:00.000Z"),
+          competencyMonth: "2026-04",
+          categoryId: "category-expense",
+          accountId: "credit-account",
+          status: "paid",
+          isRecurring: false
+        },
+        {
+          id: "legacy-credit-expense",
+          userId: "user-1",
+          description: "Compra cartão antigo",
+          amount: 3_000,
+          type: "expense",
+          date: new Date("2026-04-12T12:00:00.000Z"),
+          competencyMonth: "2026-04",
+          categoryId: "category-expense",
+          accountId: "legacy-credit-account",
+          status: "paid",
+          isRecurring: false
+        }
+      ],
+      competencyMonth: "2026-04"
+    });
+
+    expect(summary.totalCurrentBalance).toBe(8_000);
+    expect(summary.monthlyExpense).toBe(2_000);
+    expect(summary.monthlyResult).toBe(-2_000);
+    expect(summary.latestTransactions).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: "debit-expense",
+          accountType: "debit"
+        }),
+        expect.objectContaining({
+          id: "credit-expense",
+          accountType: "credit"
+        }),
+        expect.objectContaining({
+          id: "legacy-credit-expense",
+          accountType: "credit_card"
+        })
+      ])
+    );
+  });
 });

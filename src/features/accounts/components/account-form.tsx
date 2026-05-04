@@ -18,7 +18,7 @@ import { createAccountAction } from "@/features/accounts/actions/create-account-
 import { getAccountFormDefaultValues } from "@/features/accounts/components/account-form.helpers";
 import { updateAccountAction } from "@/features/accounts/actions/update-account-action";
 import { accountFormSchema, type AccountFormValues } from "@/features/accounts/schemas/account-schema";
-import { accountTypeValues, type Account } from "@/features/accounts/types/account";
+import { accountMutationTypeValues, type Account } from "@/features/accounts/types/account";
 import { buildAccountsHref } from "@/features/accounts/utils/build-accounts-href";
 import { getAccountTypeLabel } from "@/features/accounts/utils/account-formatters";
 import { applyFormActionFieldErrors, type FormActionFeedback } from "@/lib/forms/form-action-feedback";
@@ -52,6 +52,17 @@ export function AccountForm({
   }, [defaultValues, form]);
 
   const isEditing = Boolean(account);
+  const selectedAccountType = form.watch("type");
+  const isCreditAccountTypeSelected = selectedAccountType === "credit";
+
+  useEffect(() => {
+    if (isCreditAccountTypeSelected && form.getValues("initialBalance") !== 0) {
+      form.setValue("initialBalance", 0, {
+        shouldDirty: true,
+        shouldValidate: true
+      });
+    }
+  }, [form, isCreditAccountTypeSelected]);
 
   const handleSubmit = form.handleSubmit((values) => {
     setFeedback(null);
@@ -108,28 +119,39 @@ export function AccountForm({
         <div className="space-y-2">
           <Label htmlFor="type">Tipo</Label>
           <Select id="type" disabled={isPending} {...form.register("type")}>
-            {accountTypeValues.map((accountType) => (
+            {accountMutationTypeValues.map((accountType) => (
               <option key={accountType} value={accountType}>
                 {getAccountTypeLabel(accountType)}
               </option>
             ))}
           </Select>
+          {isCreditAccountTypeSelected ? (
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Contas de crédito não recebem entradas e começam com saldo zero.
+            </p>
+          ) : null}
           <FieldErrorMessage message={form.formState.errors.type?.message} />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="initialBalance">Saldo inicial</Label>
-          <Input
-            id="initialBalance"
-            disabled={isPending}
-            inputMode="decimal"
-            step="0.01"
-            type="number"
-            {...form.register("initialBalance", {
-              valueAsNumber: true
-            })}
-          />
-          <FieldErrorMessage message={form.formState.errors.initialBalance?.message} />
-        </div>
+        {isCreditAccountTypeSelected ? (
+          <p className="rounded-xl border border-border bg-background/70 px-4 py-3 text-xs leading-relaxed text-muted-foreground">
+            Crédito só altera o saldo quando a fatura é paga por uma conta débito.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            <Label htmlFor="initialBalance">Saldo inicial</Label>
+            <Input
+              id="initialBalance"
+              disabled={isPending}
+              inputMode="decimal"
+              step="0.01"
+              type="number"
+              {...form.register("initialBalance", {
+                valueAsNumber: true
+              })}
+            />
+            <FieldErrorMessage message={form.formState.errors.initialBalance?.message} />
+          </div>
+        )}
       </div>
 
       <div className="grid gap-5 sm:grid-cols-2">

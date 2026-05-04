@@ -359,7 +359,7 @@ export async function seedInitialDatabase(options: SeedInitialDatabaseOptions = 
 
   const checkingAccount = requireAccountReference(accountMap, {
     name: "Conta corrente",
-    type: "checking"
+    type: "debit"
   });
   const salaryCategory = requireCategoryReference(categoryMap, {
     name: "salário",

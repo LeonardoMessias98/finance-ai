@@ -7,7 +7,7 @@ import { StatusBanner } from "@/components/ui/status-banner";
 import { AccountForm } from "@/features/accounts/components/account-form";
 import { AccountsList } from "@/features/accounts/components/accounts-list";
 import { getAccountForEditing } from "@/features/accounts/services/get-account-for-editing-service";
-import { listAccountsForManagement } from "@/features/accounts/services/list-accounts-for-management-service";
+import { listAccountsWithCurrentBalances } from "@/features/accounts/services/list-accounts-with-current-balances-service";
 import { buildAccountsHref } from "@/features/accounts/utils/build-accounts-href";
 import Link from "next/link";
 
@@ -18,7 +18,7 @@ type AccountsPageProps = {
 
 export async function AccountsPage({ editingAccountId, isCreateModalOpen = false }: AccountsPageProps) {
   const [accounts, editingAccount] = await Promise.all([
-    listAccountsForManagement(),
+    listAccountsWithCurrentBalances(),
     editingAccountId ? getAccountForEditing(editingAccountId) : Promise.resolve(null)
   ]);
 

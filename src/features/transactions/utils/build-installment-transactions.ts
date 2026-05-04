@@ -1,5 +1,6 @@
 import type { CreateTransactionInput } from "@/features/transactions/types/transaction";
 import { getCompetencyMonthFromDate } from "@/lib/dates/competency-month";
+import { getNextCreditPaymentMonth } from "@/features/transactions/utils/credit-payment-month";
 
 function addMonthsToUtcDate(date: Date, monthsToAdd: number): Date {
   const year = date.getUTCFullYear();
@@ -14,9 +15,10 @@ function addMonthsToUtcDate(date: Date, monthsToAdd: number): Date {
 
 function splitAmountAcrossInstallments(totalAmount: number, installmentTotal: number): number[] {
   const baseAmount = Math.floor(totalAmount / installmentTotal);
-  const remainder = totalAmount % installmentTotal;
 
-  return Array.from({ length: installmentTotal }, (_, index) => baseAmount + (index < remainder ? 1 : 0));
+  return Array.from({ length: installmentTotal }, (_, index) =>
+    index === installmentTotal - 1 ? totalAmount - baseAmount * (installmentTotal - 1) : baseAmount
+  );
 }
 
 export function buildInstallmentTransactions(transaction: CreateTransactionInput): CreateTransactionInput[] {
@@ -29,12 +31,15 @@ export function buildInstallmentTransactions(transaction: CreateTransactionInput
 
   return installmentAmounts.map((installmentAmount, index) => {
     const installmentDate = addMonthsToUtcDate(transaction.date, index);
+    const competencyMonth = getCompetencyMonthFromDate(installmentDate);
 
     return {
       ...transaction,
+      description: `${transaction.description} ${index + 1}/${installmentTotal}`,
       amount: installmentAmount,
       date: installmentDate,
-      competencyMonth: getCompetencyMonthFromDate(installmentDate),
+      competencyMonth,
+      creditPaymentMonth: transaction.creditPaymentMonth ? getNextCreditPaymentMonth(competencyMonth) : undefined,
       status: index === 0 ? transaction.status : "planned",
       installment: {
         current: index + 1,

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import type { Account } from "@/features/accounts/types/account";
 import type { TransactionType } from "@/features/transactions/types/transaction";
 import type { TransactionFormValues } from "@/features/transactions/schemas/transaction-schema";
 import { getTransactionStatusLabel } from "@/features/transactions/utils/transaction-formatters";
@@ -16,6 +17,8 @@ type TransactionAdvancedFieldsProps = {
   isPending: boolean;
   isEditing: boolean;
   isInstallmentSeries: boolean;
+  isSelectedAccountCredit: boolean;
+  paymentCreditAccounts: Account[];
   showAdvancedFields: boolean;
   setShowAdvancedFields: (value: boolean | ((current: boolean) => boolean)) => void;
   statusOptions: readonly TransactionFormValues["status"][];
@@ -27,6 +30,8 @@ export function TransactionAdvancedFields({
   isPending,
   isEditing,
   isInstallmentSeries,
+  isSelectedAccountCredit,
+  paymentCreditAccounts,
   showAdvancedFields,
   setShowAdvancedFields,
   statusOptions,
@@ -57,12 +62,35 @@ export function TransactionAdvancedFields({
           </div>
         </div>
 
-        {transactionType === "expense" && !isEditing ? (
+        {transactionType === "expense" && isSelectedAccountCredit && !isEditing ? (
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="installmentCount">Parcelas</Label>
-              <Input aria-invalid={Boolean(form.formState.errors.installmentCount)} disabled={isPending || isInstallmentSeries} id="installmentCount" min={1} step={1} type="number" {...form.register("installmentCount", { valueAsNumber: true })} />
+              <Input aria-invalid={Boolean(form.formState.errors.installmentCount)} disabled={isPending || isInstallmentSeries} id="installmentCount" max={12} min={1} step={1} type="number" {...form.register("installmentCount", { valueAsNumber: true })} />
               <FieldErrorMessage message={form.formState.errors.installmentCount?.message} />
+            </div>
+          </div>
+        ) : null}
+
+        {transactionType === "expense" && paymentCreditAccounts.length > 0 ? (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="paymentForCreditAccountId">Pagamento do cartão</Label>
+              <Select
+                aria-invalid={Boolean(form.formState.errors.paymentForCreditAccountId)}
+                disabled={isPending || isInstallmentSeries}
+                id="paymentForCreditAccountId"
+                {...form.register("paymentForCreditAccountId")}
+              >
+                <option value="">Não é pagamento</option>
+                {paymentCreditAccounts.map((account) => (
+                  <option key={account.id} value={account.id}>
+                    {account.name}
+                    {account.isActive ? "" : " · Inativa"}
+                  </option>
+                ))}
+              </Select>
+              <FieldErrorMessage message={form.formState.errors.paymentForCreditAccountId?.message} />
             </div>
           </div>
         ) : null}

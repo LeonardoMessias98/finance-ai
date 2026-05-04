@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import type { Account } from "@/features/accounts/types/account";
 import type { Transaction } from "@/features/transactions/types/transaction";
+import { getAvailableTransactionAccounts } from "@/features/transactions/components/transaction-form.helpers";
 import {
   getDefaultTransactionAccountId,
   getDefaultTransactionFormValues,
@@ -22,6 +23,14 @@ const accounts: Account[] = [
     userId: "user-1",
     name: "Conta corrente",
     type: "checking",
+    initialBalance: 0,
+    isActive: true
+  },
+  {
+    id: "507f1f77bcf86cd799439013",
+    userId: "user-1",
+    name: "Cartao",
+    type: "credit",
     initialBalance: 0,
     isActive: true
   }
@@ -74,6 +83,7 @@ describe("transaction-form-defaults", () => {
         competencyMonth: "2026-04",
         installmentCount: 1,
         notes: "",
+        paymentForCreditAccountId: "",
         status: "paid",
         isRecurring: false
       })
@@ -88,9 +98,16 @@ describe("transaction-form-defaults", () => {
         competencyMonth: "2026-05",
         installmentCount: 1,
         notes: "",
+        paymentForCreditAccountId: "",
         status: "paid",
         isRecurring: false
       })
     ).toBe(true);
+  });
+
+  it("hides credit accounts from new income transactions", () => {
+    expect(getAvailableTransactionAccounts(accounts, undefined, "income").map((account) => account.type)).toEqual([
+      "checking"
+    ]);
   });
 });

@@ -2,6 +2,7 @@ import type { MutableRefObject } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
 import type { Account } from "@/features/accounts/types/account";
+import { isCreditAccount } from "@/features/accounts/utils/account-type-compatibility";
 import type { Category } from "@/features/categories/types/category";
 import type { TransactionType } from "@/features/transactions/types/transaction";
 import type { TransactionFormValues } from "@/features/transactions/schemas/transaction-schema";
@@ -19,12 +20,38 @@ export function getAutoDerivedCompetencyMonth(date: string, competencyMonth: str
   return derivedCompetencyMonth && competencyMonth === derivedCompetencyMonth ? derivedCompetencyMonth : undefined;
 }
 
-export function getAvailableTransactionAccounts(accounts: Account[], selectedAccountId?: string): Account[] {
-  return accounts.filter((account) => account.isActive || account.id === selectedAccountId);
+export function getAvailableTransactionAccounts(
+  accounts: Account[],
+  selectedAccountId?: string,
+  transactionType?: TransactionType
+): Account[] {
+  return accounts.filter((account) => {
+    const isSelectedAccount = account.id === selectedAccountId;
+
+    if (transactionType === "income" && isCreditAccount(account.type) && !isSelectedAccount) {
+      return false;
+    }
+
+    return account.isActive || isSelectedAccount;
+  });
 }
 
 export function getAvailableTransactionCategories(categories: Category[], selectedCategoryId?: string): Category[] {
   return categories.filter((category) => category.isActive || category.id === selectedCategoryId);
+}
+
+export function getAvailableCreditPaymentAccounts(accounts: Account[], selectedAccountId?: string): Account[] {
+  return accounts.filter((account) => {
+    const isSelectedAccount = account.id === selectedAccountId;
+
+    return isCreditAccount(account.type) && (account.isActive || isSelectedAccount);
+  });
+}
+
+export function isSelectedTransactionAccountCredit(accounts: Account[], selectedAccountId: string): boolean {
+  const selectedAccount = accounts.find((account) => account.id === selectedAccountId);
+
+  return selectedAccount ? isCreditAccount(selectedAccount.type) : false;
 }
 
 export function focusTransactionAmountField(form: UseFormReturn<TransactionFormValues>) {
@@ -83,6 +110,28 @@ export function syncTransactionFormCategory(
 
   form.setValue("categoryId", nextCategoryId, {
     shouldDirty: Boolean(currentCategoryId),
+    shouldValidate: true
+  });
+}
+
+export function syncTransactionPaymentCreditAccount(
+  form: UseFormReturn<TransactionFormValues>,
+  paymentCreditAccounts: Account[]
+) {
+  const currentPaymentCreditAccountId = form.getValues("paymentForCreditAccountId");
+
+  if (!currentPaymentCreditAccountId) {
+    return;
+  }
+
+  const validPaymentCreditAccountIds = new Set(paymentCreditAccounts.map((account) => account.id));
+
+  if (validPaymentCreditAccountIds.has(currentPaymentCreditAccountId)) {
+    return;
+  }
+
+  form.setValue("paymentForCreditAccountId", "", {
+    shouldDirty: true,
     shouldValidate: true
   });
 }

@@ -1,6 +1,8 @@
-export const accountTypeValues = ["checking", "savings", "cash", "credit_card", "investment"] as const;
+export const accountTypeValues = ["debit", "credit", "checking", "savings", "cash", "credit_card", "investment"] as const;
+export const accountMutationTypeValues = ["debit", "credit"] as const;
 
 export type AccountType = (typeof accountTypeValues)[number];
+export type AccountMutationType = (typeof accountMutationTypeValues)[number];
 export type AccountFieldName = "name" | "type" | "initialBalance" | "isActive" | "color" | "icon";
 
 // Monetary values use the smallest currency unit, such as cents.
@@ -15,10 +17,14 @@ export type Account = {
   icon?: string;
 };
 
+export type AccountWithCurrentBalance = Account & {
+  currentBalance: number;
+};
+
 export type CreateAccountInput = {
   userId: string;
   name: string;
-  type: AccountType;
+  type: AccountMutationType;
   initialBalance: number;
   isActive: boolean;
   color?: string;

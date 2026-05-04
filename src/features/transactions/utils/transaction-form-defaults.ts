@@ -49,6 +49,7 @@ export function getDefaultTransactionFormValues(input: {
     installmentCount: input.transaction?.installment?.total ?? 1,
     categoryId: input.transaction?.categoryId ?? "",
     accountId: getDefaultTransactionAccountId(input.accounts, input.transaction?.accountId),
+    paymentForCreditAccountId: input.transaction?.paymentForCreditAccountId ?? "",
     notes: input.transaction?.notes ?? "",
     status: input.transaction?.status ?? getDefaultTransactionStatus(transactionType),
     isRecurring: input.transaction?.isRecurring ?? false
@@ -58,7 +59,14 @@ export function getDefaultTransactionFormValues(input: {
 export function shouldOpenAdvancedTransactionFields(
   values: Pick<
     TransactionFormValues,
-    "competencyMonth" | "date" | "installmentCount" | "notes" | "status" | "isRecurring" | "type"
+    | "competencyMonth"
+    | "date"
+    | "installmentCount"
+    | "notes"
+    | "paymentForCreditAccountId"
+    | "status"
+    | "isRecurring"
+    | "type"
   >
 ): boolean {
   const derivedCompetencyMonth = getCompetencyMonthFromDateInput(values.date);
@@ -67,6 +75,7 @@ export function shouldOpenAdvancedTransactionFields(
     values.notes.trim().length > 0 ||
     values.isRecurring ||
     values.installmentCount > 1 ||
+    values.paymentForCreditAccountId.trim().length > 0 ||
     values.status !== getDefaultTransactionStatus(values.type) ||
     (Boolean(derivedCompetencyMonth) && values.competencyMonth !== derivedCompetencyMonth)
   );

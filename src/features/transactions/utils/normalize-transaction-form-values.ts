@@ -41,6 +41,8 @@ export function normalizeTransactionFormValues(
         : undefined,
     categoryId: values.categoryId,
     accountId: values.accountId,
+    paymentForCreditAccountId:
+      values.type === "expense" ? normalizeOptionalValue(values.paymentForCreditAccountId) : undefined,
     notes: normalizeOptionalValue(values.notes),
     status: values.status,
     isRecurring: values.isRecurring

@@ -35,7 +35,7 @@ function isValidDateInput(value: string): boolean {
 const installmentSchema = z
   .object({
     current: z.number().int().min(1),
-    total: z.number().int().min(1)
+    total: z.number().int().min(1).max(12)
   })
   .refine((value) => value.current <= value.total, {
     message: "A parcela atual não pode ser maior que o total.",
@@ -59,8 +59,10 @@ const transactionFieldsSchema = z.object({
     invalid_type_error: "Informe uma data válida."
   }),
   competencyMonth: z.string().regex(competencyMonthRegex, "Informe a competência no formato YYYY-MM."),
+  creditPaymentMonth: z.string().regex(competencyMonthRegex, "Informe a fatura no formato YYYY-MM.").optional(),
   categoryId: objectIdStringSchema.optional(),
   accountId: objectIdStringSchema,
+  paymentForCreditAccountId: objectIdStringSchema.optional(),
   notes: z.string().trim().max(500, "Use no máximo 500 caracteres nas observações.").optional(),
   status: z.enum(transactionStatusValues, {
     errorMap: () => ({
@@ -83,6 +85,8 @@ function validateTransactionRules(
     status: TransactionStatus;
     categoryId?: string;
     accountId: string;
+    creditPaymentMonth?: string;
+    paymentForCreditAccountId?: string;
     installment?: {
       current: number;
       total: number;
@@ -125,6 +129,22 @@ function validateTransactionRules(
         message: "Transações parceladas precisam manter o vínculo da série."
       });
     }
+  }
+
+  if (value.paymentForCreditAccountId && value.type !== "expense") {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["paymentForCreditAccountId"],
+      message: "Pagamento de cartão deve ser registrado como despesa."
+    });
+  }
+
+  if (value.creditPaymentMonth && value.type !== "expense") {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["creditPaymentMonth"],
+      message: "Mês de pagamento da fatura só pode ser usado em despesas."
+    });
   }
 }
 
@@ -169,12 +189,16 @@ export const transactionFormSchema = z
       })
       .int("Informe um número inteiro de parcelas.")
       .min(1, "Use pelo menos 1 parcela.")
-      .max(60, "Use no máximo 60 parcelas."),
+      .max(12, "Use no máximo 12 parcelas."),
     categoryId: z
       .string()
       .trim()
       .refine(isValidOptionalObjectId, "Selecione uma categoria válida."),
     accountId: objectIdStringSchema,
+    paymentForCreditAccountId: z
+      .string()
+      .trim()
+      .refine(isValidOptionalObjectId, "Selecione uma conta de crédito válida."),
     notes: z.string().trim().max(500, "Use no máximo 500 caracteres nas observações."),
     status: z.enum(transactionStatusValues, {
       errorMap: () => ({
@@ -189,7 +213,8 @@ export const transactionFormSchema = z
         type: value.type,
         status: value.status,
         categoryId: value.categoryId || undefined,
-        accountId: value.accountId
+        accountId: value.accountId,
+        paymentForCreditAccountId: value.paymentForCreditAccountId || undefined
       },
       context
     );
@@ -216,6 +241,7 @@ export type TransactionFormValues = {
   installmentCount: number;
   categoryId: string;
   accountId: string;
+  paymentForCreditAccountId: string;
   notes: string;
   status: TransactionStatus;
   isRecurring: boolean;

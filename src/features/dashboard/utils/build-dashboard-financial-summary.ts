@@ -1,10 +1,20 @@
 import type { Account } from "@/features/accounts/types/account";
+import { isCreditAccount } from "@/features/accounts/utils/account-type-compatibility";
 import type { Category } from "@/features/categories/types/category";
-import type { DashboardFinancialSummary, DashboardCategoryTotal } from "@/features/dashboard/types/dashboard-financial-summary";
+import type {
+  DashboardFinancialSummary,
+  DashboardCategoryTotal,
+  DashboardCreditAccountSummary
+} from "@/features/dashboard/types/dashboard-financial-summary";
 import { buildDashboardAnalytics, createEmptyDashboardAnalytics } from "@/features/dashboard/utils/build-dashboard-analytics";
 import type { Transaction, TransactionType } from "@/features/transactions/types/transaction";
+import {
+  buildDebitTransactionsMonthlySummary,
+  filterDebitTransactions
+} from "@/features/transactions/utils/build-transaction-account-kind-groups";
 
 const latestTransactionsLimit = 6;
+const latestTransactionsPerAccountKindLimit = 3;
 
 export function isAppliedTransaction(transaction: Transaction): boolean {
   if (transaction.type === "income") {
@@ -27,9 +37,14 @@ function sortTransactionsByDate(transactions: Transaction[]): Transaction[] {
 }
 
 function calculateAccountBalances(accounts: Account[], transactions: Transaction[]) {
-  const balanceByAccountId = new Map(accounts.map((account) => [account.id, account.initialBalance]));
+  const debitAccounts = accounts.filter((account) => !isCreditAccount(account.type));
+  const balanceByAccountId = new Map(debitAccounts.map((account) => [account.id, account.initialBalance]));
 
   for (const transaction of transactions) {
+    if (!balanceByAccountId.has(transaction.accountId)) {
+      continue;
+    }
+
     if (!isAppliedTransaction(transaction)) {
       continue;
     }
@@ -50,7 +65,7 @@ function calculateAccountBalances(accounts: Account[], transactions: Transaction
     }
   }
 
-  return [...accounts]
+  return [...debitAccounts]
     .map((account) => ({
       accountId: account.id,
       accountName: account.name,
@@ -66,6 +81,69 @@ function calculateAccountBalances(accounts: Account[], transactions: Transaction
 
       return left.accountName.localeCompare(right.accountName, "pt-BR");
     });
+}
+
+function calculateCreditAccountSummaries(accounts: Account[], transactions: Transaction[]): DashboardCreditAccountSummary[] {
+  const creditAccounts = accounts.filter((account) => isCreditAccount(account.type));
+
+  return creditAccounts
+    .map((account) => {
+      const spentAmount = transactions
+        .filter(
+          (transaction) =>
+            transaction.accountId === account.id && transaction.type === "expense" && isAppliedTransaction(transaction)
+        )
+        .reduce((sum, transaction) => sum + transaction.amount, 0);
+      const paidAmount = transactions
+        .filter(
+          (transaction) =>
+            transaction.paymentForCreditAccountId === account.id &&
+            transaction.type === "expense" &&
+            isAppliedTransaction(transaction)
+        )
+        .reduce((sum, transaction) => sum + transaction.amount, 0);
+
+      return {
+        accountId: account.id,
+        accountName: account.name,
+        accountType: account.type,
+        isActive: account.isActive,
+        color: account.color,
+        spentAmount,
+        paidAmount,
+        openAmount: spentAmount - paidAmount
+      };
+    })
+    .sort((left, right) => {
+      if (left.isActive !== right.isActive) {
+        return Number(right.isActive) - Number(left.isActive);
+      }
+
+      return left.accountName.localeCompare(right.accountName, "pt-BR");
+    });
+}
+
+function selectLatestTransactions(transactions: Transaction[], accounts: Account[]): Transaction[] {
+  const accountById = new Map(accounts.map((account) => [account.id, account]));
+  const debitTransactions = transactions.filter((transaction) => {
+    const account = accountById.get(transaction.accountId);
+
+    return !account || !isCreditAccount(account.type);
+  });
+  const creditTransactions = transactions.filter((transaction) => {
+    const account = accountById.get(transaction.accountId);
+
+    return account ? isCreditAccount(account.type) : false;
+  });
+
+  if (debitTransactions.length === 0 || creditTransactions.length === 0) {
+    return transactions.slice(0, latestTransactionsLimit);
+  }
+
+  return [
+    ...debitTransactions.slice(0, latestTransactionsPerAccountKindLimit),
+    ...creditTransactions.slice(0, latestTransactionsPerAccountKindLimit)
+  ];
 }
 
 function aggregateCategoryTotals(transactions: Transaction[], categories: Category[]): DashboardCategoryTotal[] {
@@ -104,6 +182,7 @@ export function createEmptyDashboardFinancialSummary(competencyMonth: string): D
     monthlyExpense: 0,
     monthlyResult: 0,
     accountBalances: [],
+    creditAccountSummaries: [],
     incomeTotalsByCategory: [],
     expenseTotalsByCategory: [],
     latestTransactions: [],
@@ -122,27 +201,32 @@ export function buildDashboardFinancialSummary(input: {
     input.transactions.filter((transaction) => transaction.competencyMonth === input.competencyMonth)
   );
   const accountBalances = calculateAccountBalances(input.accounts, monthlyTransactions);
+  const creditAccountSummaries = calculateCreditAccountSummaries(input.accounts, monthlyTransactions);
   const appliedTransactions = input.transactions.filter(isAppliedTransaction);
   const appliedMonthlyTransactions = monthlyTransactions.filter(isAppliedTransaction);
-  const monthlyIncomeTransactions = appliedMonthlyTransactions.filter((transaction) => transaction.type === "income");
-  const monthlyExpenseTransactions = appliedMonthlyTransactions.filter((transaction) => transaction.type === "expense");
+  const appliedDebitTransactions = filterDebitTransactions(appliedTransactions, input.accounts);
+  const appliedMonthlyDebitTransactions = filterDebitTransactions(appliedMonthlyTransactions, input.accounts);
+  const monthlyIncomeTransactions = appliedMonthlyDebitTransactions.filter((transaction) => transaction.type === "income");
+  const monthlyExpenseTransactions = appliedMonthlyDebitTransactions.filter(
+    (transaction) => transaction.type === "expense"
+  );
+  const monthlyDebitSummary = buildDebitTransactionsMonthlySummary(appliedMonthlyTransactions, input.accounts);
   const expenseTotalsByCategory = aggregateCategoryTotals(monthlyExpenseTransactions, input.categories);
-  const latestTransactions = (input.latestTransactionsType
+  const latestTransactionsCandidates = input.latestTransactionsType
     ? monthlyTransactions.filter((transaction) => transaction.type === input.latestTransactionsType)
-    : monthlyTransactions
-  ).slice(0, latestTransactionsLimit);
+    : monthlyTransactions;
+  const latestTransactions = selectLatestTransactions(latestTransactionsCandidates, input.accounts);
   const accountById = new Map(input.accounts.map((account) => [account.id, account]));
   const categoryById = new Map(input.categories.map((category) => [category.id, category]));
 
   return {
     competencyMonth: input.competencyMonth,
     totalCurrentBalance: accountBalances.reduce((sum, account) => sum + account.currentBalance, 0),
-    monthlyIncome: monthlyIncomeTransactions.reduce((sum, transaction) => sum + transaction.amount, 0),
-    monthlyExpense: monthlyExpenseTransactions.reduce((sum, transaction) => sum + transaction.amount, 0),
-    monthlyResult:
-      monthlyIncomeTransactions.reduce((sum, transaction) => sum + transaction.amount, 0) -
-      monthlyExpenseTransactions.reduce((sum, transaction) => sum + transaction.amount, 0),
+    monthlyIncome: monthlyDebitSummary.incomeAmount,
+    monthlyExpense: monthlyDebitSummary.expenseAmount,
+    monthlyResult: monthlyDebitSummary.resultAmount,
     accountBalances,
+    creditAccountSummaries,
     incomeTotalsByCategory: aggregateCategoryTotals(monthlyIncomeTransactions, input.categories),
     expenseTotalsByCategory,
     latestTransactions: latestTransactions.map((transaction) => ({
@@ -153,11 +237,12 @@ export function buildDashboardFinancialSummary(input: {
       status: transaction.status,
       date: transaction.date,
       accountName: accountById.get(transaction.accountId)?.name ?? "Conta indisponível",
+      accountType: accountById.get(transaction.accountId)?.type ?? "debit",
       categoryName: transaction.categoryId ? categoryById.get(transaction.categoryId)?.name : undefined
     })),
     analytics: buildDashboardAnalytics({
       competencyMonth: input.competencyMonth,
-      allAppliedTransactions: appliedTransactions,
+      allAppliedTransactions: appliedDebitTransactions,
       monthlyExpenseTransactions,
       expenseTotalsByCategory
     })

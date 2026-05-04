@@ -55,6 +55,9 @@ export function TransactionTypeSelector({
           </Button>
         ))}
       </div>
+      <p className="text-xs leading-relaxed text-muted-foreground">
+        Contas de crédito não recebem entradas.
+      </p>
       <FieldErrorMessage message={form.formState.errors.type?.message} />
     </fieldset>
   );
@@ -151,6 +154,9 @@ export function TransactionPrimaryFields({
               </option>
             ))}
           </Select>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            Compras no crédito aparecem no mês da compra; a fatura é considerada no mês seguinte.
+          </p>
           <FieldErrorMessage message={form.formState.errors.accountId?.message} />
         </div>
       </div>

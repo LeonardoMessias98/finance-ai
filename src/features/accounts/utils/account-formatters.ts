@@ -1,11 +1,13 @@
 import type { AccountType } from "@/features/accounts/types/account";
 
 const accountTypeLabelMap: Record<AccountType, string> = {
-  checking: "Conta corrente",
-  savings: "Poupança",
-  cash: "Dinheiro",
-  credit_card: "Cartão de crédito",
-  investment: "Investimento"
+  debit: "Débito",
+  credit: "Crédito",
+  checking: "Débito",
+  savings: "Débito",
+  cash: "Débito",
+  credit_card: "Crédito",
+  investment: "Débito"
 };
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {

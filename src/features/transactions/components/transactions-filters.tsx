@@ -39,8 +39,7 @@ export function TransactionsFiltersPanel({
   ].filter((field): field is { name: string; value: string } => Boolean(field));
 
   const clearSecondaryFiltersHref = buildTransactionsHref({
-    competencyMonth: filters.competencyMonth,
-    type: filters.type
+    competencyMonth: filters.competencyMonth
   });
   const accountFieldId = `${fieldPrefix}-account`;
   const categoryFieldId = `${fieldPrefix}-category`;

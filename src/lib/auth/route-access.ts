@@ -1,4 +1,4 @@
-const protectedRoutePrefixes = ["/", "/accounts", "/budgets", "/categories", "/goals", "/transactions"] as const;
+const protectedRoutePrefixes = ["/", "/accounts", "/budgets", "/categories", "/family", "/goals", "/transactions"] as const;
 const authenticationRoutePrefixes = ["/login"] as const;
 
 function matchesRoutePrefix(pathname: string, routePrefix: string): boolean {

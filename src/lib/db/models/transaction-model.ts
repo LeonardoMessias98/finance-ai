@@ -19,8 +19,10 @@ export type TransactionDocument = {
   type: TransactionType;
   date: Date;
   competencyMonth: string;
+  creditPaymentMonth?: string;
   categoryId?: Types.ObjectId;
   accountId: Types.ObjectId;
+  paymentForCreditAccountId?: Types.ObjectId;
   notes?: string;
   status: TransactionStatus;
   isRecurring: boolean;
@@ -38,7 +40,8 @@ const installmentSchema = new Schema<TransactionInstallmentDocument>(
     total: {
       type: Number,
       required: true,
-      min: 1
+      min: 1,
+      max: 12
     }
   },
   {
@@ -83,6 +86,10 @@ const transactionSchema = new Schema<TransactionDocument>(
       required: true,
       match: /^\d{4}-(0[1-9]|1[0-2])$/
     },
+    creditPaymentMonth: {
+      type: String,
+      match: /^\d{4}-(0[1-9]|1[0-2])$/
+    },
     categoryId: {
       type: Schema.Types.ObjectId,
       ref: "Category"
@@ -91,6 +98,10 @@ const transactionSchema = new Schema<TransactionDocument>(
       type: Schema.Types.ObjectId,
       ref: "Account",
       required: true
+    },
+    paymentForCreditAccountId: {
+      type: Schema.Types.ObjectId,
+      ref: "Account"
     },
     notes: {
       type: String,
@@ -136,12 +147,35 @@ transactionSchema.pre("validate", function validateTransaction(next) {
     transaction.invalidate("categoryId", "Income and expense transactions require a category.");
   }
 
+  if (transaction.paymentForCreditAccountId && transaction.type !== "expense") {
+    transaction.invalidate("paymentForCreditAccountId", "Credit card payments must be expense transactions.");
+  }
+
+  if (transaction.creditPaymentMonth && transaction.type !== "expense") {
+    transaction.invalidate("creditPaymentMonth", "Credit payment month can only be used for expense transactions.");
+  }
+
   if (!validStatusByTransactionType[transaction.type].includes(transaction.status)) {
     transaction.invalidate("status", `Status "${transaction.status}" is not valid for transaction type "${transaction.type}".`);
   }
 
   next();
 });
+
+transactionSchema.index(
+  {
+    userId: 1,
+    creditPaymentMonth: 1,
+    accountId: 1
+  },
+  {
+    partialFilterExpression: {
+      creditPaymentMonth: {
+        $exists: true
+      }
+    }
+  }
+);
 
 transactionSchema.index({
   userId: 1,
@@ -154,6 +188,21 @@ transactionSchema.index({
   accountId: 1,
   date: -1
 });
+
+transactionSchema.index(
+  {
+    userId: 1,
+    paymentForCreditAccountId: 1,
+    date: -1
+  },
+  {
+    partialFilterExpression: {
+      paymentForCreditAccountId: {
+        $exists: true
+      }
+    }
+  }
+);
 
 transactionSchema.index(
   {

@@ -38,7 +38,9 @@ export function TransactionForm({
     isEditing,
     isInstallmentSeries,
     isPending,
+    isSelectedAccountCredit,
     isSubmitBlocked,
+    paymentCreditAccounts,
     resetForm,
     setShowAdvancedFields,
     showAdvancedFields,
@@ -77,9 +79,11 @@ export function TransactionForm({
         isEditing={isEditing}
         isInstallmentSeries={isInstallmentSeries}
         isPending={isPending}
+        paymentCreditAccounts={paymentCreditAccounts}
         setShowAdvancedFields={setShowAdvancedFields}
         showAdvancedFields={showAdvancedFields}
         statusOptions={statusOptions}
+        isSelectedAccountCredit={isSelectedAccountCredit}
         transactionType={transactionType}
       />
       <TransactionFormAlerts

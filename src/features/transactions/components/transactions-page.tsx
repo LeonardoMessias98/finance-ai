@@ -11,14 +11,12 @@ import { listAccountsForManagement } from "@/features/accounts/services/list-acc
 import { listCategoriesForManagement } from "@/features/categories/services/list-categories-for-management-service";
 import { OpenTransactionModalButton } from "@/features/transactions/components/open-transaction-modal-button";
 import { TransactionForm } from "@/features/transactions/components/transaction-form";
-import {
-  TransactionsFiltersPanel,
-  TransactionsFiltersSidebar
-} from "@/features/transactions/components/transactions-filters";
+import { TransactionsFiltersPanel } from "@/features/transactions/components/transactions-filters";
 import { TransactionsList } from "@/features/transactions/components/transactions-list";
 import { getTransactionForEditing } from "@/features/transactions/services/get-transaction-for-editing-service";
 import { listTransactionsForManagement } from "@/features/transactions/services/list-transactions-for-management-service";
 import type { TransactionType } from "@/features/transactions/types/transaction";
+import { buildDebitTransactionsMonthlySummary } from "@/features/transactions/utils/build-transaction-account-kind-groups";
 import { buildTransactionsHref } from "@/features/transactions/utils/build-transactions-href";
 import {
   formatTransactionAmountFromCents,
@@ -36,6 +34,10 @@ type TransactionsPageProps = {
   };
 };
 
+export function countActiveTransactionFilters(filters: TransactionsPageProps["filters"]): number {
+  return [filters.accountId, filters.categoryId, filters.type].filter(Boolean).length;
+}
+
 export async function TransactionsPage({
   editingTransactionId,
   isFiltersModalOpen = false,
@@ -48,13 +50,7 @@ export async function TransactionsPage({
     listCategoriesForManagement()
   ]);
 
-  const totalIncome = transactions
-    .filter((transaction) => transaction.type === "income")
-    .reduce((sum, transaction) => sum + transaction.amount, 0);
-  const totalExpense = transactions
-    .filter((transaction) => transaction.type === "expense")
-    .reduce((sum, transaction) => sum + transaction.amount, 0);
-  const netFlow = totalIncome - totalExpense;
+  const monthlyDebitSummary = buildDebitTransactionsMonthlySummary(transactions, accounts);
   const hasEditingError = Boolean(editingTransactionId) && !editingTransaction;
   const returnHref = buildTransactionsHref(filters);
   const filtersModalHref = buildTransactionsHref({
@@ -63,6 +59,8 @@ export async function TransactionsPage({
   });
   const scopeLabel = formatTransactionCompetencyMonth(filters.competencyMonth);
   const isEditingModalOpen = Boolean(editingTransaction);
+  const activeFiltersCount = countActiveTransactionFilters(filters);
+  const filtersButtonLabel = activeFiltersCount > 0 ? `Filtros (${activeFiltersCount})` : "Filtros";
 
   return (
     <AuthenticatedAppShell>
@@ -70,8 +68,8 @@ export async function TransactionsPage({
         <PageHeader
           actions={
             <>
-              <Button asChild className="lg:hidden" type="button" variant="outline">
-                <Link href={filtersModalHref}>Filtros</Link>
+              <Button asChild type="button" variant={activeFiltersCount > 0 ? "default" : "outline"}>
+                <Link href={filtersModalHref}>{filtersButtonLabel}</Link>
               </Button>
               <OpenTransactionModalButton
                 className="sm:min-w-[12rem]"
@@ -93,30 +91,32 @@ export async function TransactionsPage({
           />
         ) : null}
 
-        <div className="grid gap-5 lg:grid-cols-[20.5rem_minmax(0,1fr)] xl:grid-cols-[20.5rem_minmax(0,1fr)]">
-          <div className="hidden space-y-5 lg:sticky lg:top-24 lg:block lg:self-start">
-            <TransactionsFiltersSidebar accounts={accounts} categories={categories} filters={filters} />
-          </div>
-
+        <div className="grid gap-5">
           <div className="space-y-5">
             <Card>
               <CardContent className="grid gap-4 pt-6 sm:grid-cols-3">
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Entradas</p>
-                  <p className="text-2xl font-semibold text-income">{formatTransactionAmountFromCents(totalIncome)}</p>
+                  <p className="text-2xl font-semibold text-income">
+                    {formatTransactionAmountFromCents(monthlyDebitSummary.incomeAmount)}
+                  </p>
                 </div>
 
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Saídas</p>
                   <p className="text-2xl font-semibold text-destructive">
-                    {formatTransactionAmountFromCents(totalExpense)}
+                    {formatTransactionAmountFromCents(monthlyDebitSummary.expenseAmount)}
                   </p>
                 </div>
 
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Resultado</p>
-                  <p className={`text-2xl font-semibold ${netFlow >= 0 ? "text-income" : "text-destructive"}`}>
-                    {formatTransactionAmountFromCents(netFlow)}
+                  <p
+                    className={`text-2xl font-semibold ${
+                      monthlyDebitSummary.resultAmount >= 0 ? "text-income" : "text-destructive"
+                    }`}
+                  >
+                    {formatTransactionAmountFromCents(monthlyDebitSummary.resultAmount)}
                   </p>
                 </div>
               </CardContent>

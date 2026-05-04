@@ -1,5 +1,6 @@
 import "server-only";
 
+import { findAccountByIdForUser } from "@/features/accounts/repositories/account-repository";
 import type { ParsedTransactionFormValues } from "@/features/transactions/schemas/transaction-schema";
 import {
   findTransactionById,
@@ -7,6 +8,7 @@ import {
 } from "@/features/transactions/repositories/transaction-repository";
 import { assertTransactionRelations } from "@/features/transactions/services/assert-transaction-relations-service";
 import { InstallmentSeriesUpdateNotSupportedError } from "@/features/transactions/services/transaction-errors";
+import { resolveCreditPaymentMonth } from "@/features/transactions/utils/credit-payment-month";
 import { normalizeTransactionFormValues } from "@/features/transactions/utils/normalize-transaction-form-values";
 import { requireAuthenticatedAppUser } from "@/lib/auth/session";
 
@@ -33,5 +35,17 @@ export async function updateTransaction(transactionId: string, values: ParsedTra
 
   await assertTransactionRelations(payload, user.id);
 
-  return updateTransactionRecord(payload);
+  const sourceAccount = await findAccountByIdForUser(payload.accountId, user.id);
+  const creditPaymentMonth = sourceAccount
+    ? resolveCreditPaymentMonth({
+        transactionType: payload.type,
+        accountType: sourceAccount.type,
+        competencyMonth: payload.competencyMonth
+      })
+    : undefined;
+
+  return updateTransactionRecord({
+    ...payload,
+    creditPaymentMonth
+  });
 }

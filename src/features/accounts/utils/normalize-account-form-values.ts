@@ -1,5 +1,6 @@
 import type { ParsedAccountFormValues } from "@/features/accounts/schemas/account-schema";
 import type { CreateAccountInput } from "@/features/accounts/types/account";
+import { isCreditAccount } from "@/features/accounts/utils/account-type-compatibility";
 
 function normalizeOptionalValue(value: string | undefined): string | undefined {
   if (!value) {
@@ -15,7 +16,7 @@ export function normalizeAccountFormValues(values: ParsedAccountFormValues): Omi
   return {
     name: values.name.trim(),
     type: values.type,
-    initialBalance: Math.round(values.initialBalance * 100),
+    initialBalance: isCreditAccount(values.type) ? 0 : Math.round(values.initialBalance * 100),
     isActive: values.isActive,
     color: normalizeOptionalValue(values.color),
     icon: normalizeOptionalValue(values.icon)

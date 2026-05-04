@@ -21,6 +21,10 @@ const navigationLinks = [
     label: "Categorias"
   },
   {
+    href: "/family",
+    label: "Família"
+  },
+  {
     href: "/budgets",
     label: "Orçamentos"
   },

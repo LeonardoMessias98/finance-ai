@@ -9,12 +9,15 @@ import { createTransactionAction } from "@/features/transactions/actions/create-
 import { updateTransactionAction } from "@/features/transactions/actions/update-transaction-action";
 import {
   focusTransactionAmountField,
+  getAvailableCreditPaymentAccounts,
   getAutoDerivedCompetencyMonth,
   getAvailableTransactionAccounts,
   getAvailableTransactionCategories,
+  isSelectedTransactionAccountCredit,
   resetTransactionFormState,
   syncTransactionFormAccount,
-  syncTransactionFormCategory
+  syncTransactionFormCategory,
+  syncTransactionPaymentCreditAccount
 } from "@/features/transactions/components/transaction-form.helpers";
 import type { TransactionFormProps } from "@/features/transactions/components/transaction-form.types";
 import { transactionFormSchema, type TransactionFormValues } from "@/features/transactions/schemas/transaction-schema";
@@ -49,21 +52,31 @@ export function useTransactionFormController({
   const isEditing = Boolean(transaction);
   const isInstallmentSeries = Boolean(transaction?.installment && transaction.installment.total > 1);
   const transactionType = form.watch("type");
+  const selectedAccountId = form.watch("accountId");
+  const selectedPaymentCreditAccountId = form.watch("paymentForCreditAccountId");
   const transactionDate = form.watch("date");
   const competencyMonth = form.watch("competencyMonth");
   const availableAccounts = useMemo(
-    () => getAvailableTransactionAccounts(accounts, transaction?.accountId),
-    [accounts, transaction?.accountId]
+    () => getAvailableTransactionAccounts(accounts, transaction?.accountId, transactionType),
+    [accounts, transaction?.accountId, transactionType]
   );
   const availableCategories = useMemo(
     () => getAvailableTransactionCategories(categories, transaction?.categoryId),
     [categories, transaction?.categoryId]
+  );
+  const paymentCreditAccounts = useMemo(
+    () => getAvailableCreditPaymentAccounts(accounts, transaction?.paymentForCreditAccountId),
+    [accounts, transaction?.paymentForCreditAccountId]
   );
   const categoryOptions = useMemo(
     () => availableCategories.filter((category) => category.type === transactionType),
     [availableCategories, transactionType]
   );
   const statusOptions = getTransactionStatusOptions(transactionType);
+  const isSelectedAccountCredit = useMemo(
+    () => isSelectedTransactionAccountCredit(availableAccounts, selectedAccountId),
+    [availableAccounts, selectedAccountId]
+  );
   const isSubmitBlocked = isInstallmentSeries || availableAccounts.length === 0 || categoryOptions.length === 0;
 
   useEffect(() => {
@@ -86,8 +99,14 @@ export function useTransactionFormController({
   }, [form, statusOptions, transactionType]);
 
   useEffect(() => {
-    if (transactionType !== "expense" && form.getValues("installmentCount") !== 1) {
+    if ((transactionType !== "expense" || !isSelectedAccountCredit) && form.getValues("installmentCount") !== 1) {
       form.setValue("installmentCount", 1, { shouldValidate: true });
+    }
+  }, [form, isSelectedAccountCredit, transactionType]);
+
+  useEffect(() => {
+    if (transactionType !== "expense" && form.getValues("paymentForCreditAccountId")) {
+      form.setValue("paymentForCreditAccountId", "", { shouldValidate: true });
     }
   }, [form, transactionType]);
 
@@ -116,6 +135,10 @@ export function useTransactionFormController({
   useEffect(() => {
     syncTransactionFormCategory(form, categoryOptions);
   }, [categoryOptions, form]);
+
+  useEffect(() => {
+    syncTransactionPaymentCreditAccount(form, paymentCreditAccounts);
+  }, [form, paymentCreditAccounts, selectedPaymentCreditAccountId]);
 
   useEffect(() => {
     if (form.formState.errors.competencyMonth || form.formState.errors.installmentCount || form.formState.errors.notes || form.formState.errors.status) {
@@ -173,9 +196,11 @@ export function useTransactionFormController({
     isEditing,
     isInstallmentSeries,
     isPending,
+    isSelectedAccountCredit,
     isSubmitBlocked,
     availableAccounts,
     categoryOptions,
+    paymentCreditAccounts,
     resetForm,
     setShowAdvancedFields,
     showAdvancedFields,

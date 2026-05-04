@@ -7,7 +7,7 @@ import type { CreateTransactionInput } from "@/features/transactions/types/trans
 export const initialAccountSeedData = [
   {
     name: "Conta corrente",
-    type: "checking",
+    type: "debit",
     initialBalance: 250_000,
     isActive: true,
     color: "#0f766e",
@@ -15,7 +15,7 @@ export const initialAccountSeedData = [
   },
   {
     name: "Reserva",
-    type: "savings",
+    type: "debit",
     initialBalance: 120_000,
     isActive: true,
     color: "#1d4ed8",
@@ -23,7 +23,7 @@ export const initialAccountSeedData = [
   },
   {
     name: "Carteira",
-    type: "cash",
+    type: "debit",
     initialBalance: 15_000,
     isActive: true,
     color: "#b45309",
@@ -31,7 +31,7 @@ export const initialAccountSeedData = [
   },
   {
     name: "Cartão principal",
-    type: "credit_card",
+    type: "credit",
     initialBalance: 0,
     isActive: true,
     color: "#7c3aed",
@@ -39,7 +39,7 @@ export const initialAccountSeedData = [
   },
   {
     name: "Investimentos",
-    type: "investment",
+    type: "debit",
     initialBalance: 75_000,
     isActive: true,
     color: "#166534",

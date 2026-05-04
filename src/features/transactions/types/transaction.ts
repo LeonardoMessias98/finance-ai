@@ -9,9 +9,11 @@ export type TransactionFieldName =
   | "type"
   | "date"
   | "competencyMonth"
+  | "creditPaymentMonth"
   | "installmentCount"
   | "categoryId"
   | "accountId"
+  | "paymentForCreditAccountId"
   | "notes"
   | "status"
   | "isRecurring";
@@ -30,8 +32,10 @@ export type Transaction = {
   type: TransactionType;
   date: Date;
   competencyMonth: string;
+  creditPaymentMonth?: string;
   categoryId?: string;
   accountId: string;
+  paymentForCreditAccountId?: string;
   notes?: string;
   status: TransactionStatus;
   isRecurring: boolean;
@@ -46,8 +50,10 @@ export type CreateTransactionInput = {
   type: TransactionType;
   date: Date;
   competencyMonth: string;
+  creditPaymentMonth?: string;
   categoryId?: string;
   accountId: string;
+  paymentForCreditAccountId?: string;
   notes?: string;
   status: TransactionStatus;
   isRecurring?: boolean;

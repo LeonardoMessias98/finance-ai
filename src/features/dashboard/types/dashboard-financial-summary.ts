@@ -11,6 +11,17 @@ export type DashboardAccountBalance = {
   currentBalance: number;
 };
 
+export type DashboardCreditAccountSummary = {
+  accountId: string;
+  accountName: string;
+  accountType: AccountType;
+  isActive: boolean;
+  color?: string;
+  spentAmount: number;
+  paidAmount: number;
+  openAmount: number;
+};
+
 export type DashboardCategoryTotal = {
   categoryId?: string;
   categoryName: string;
@@ -26,6 +37,7 @@ export type DashboardLatestTransaction = {
   status: TransactionStatus;
   date: Date;
   accountName: string;
+  accountType: AccountType;
   categoryName?: string;
 };
 
@@ -36,6 +48,7 @@ export type DashboardFinancialSummary = {
   monthlyExpense: number;
   monthlyResult: number;
   accountBalances: DashboardAccountBalance[];
+  creditAccountSummaries: DashboardCreditAccountSummary[];
   incomeTotalsByCategory: DashboardCategoryTotal[];
   expenseTotalsByCategory: DashboardCategoryTotal[];
   latestTransactions: DashboardLatestTransaction[];
