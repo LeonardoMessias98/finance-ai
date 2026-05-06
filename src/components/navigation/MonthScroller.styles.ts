@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 export const monthScrollerStyles = {
   navigation: "-mx-4 overflow-x-auto px-4 sm:mx-0 sm:px-0",
-  list: "flex min-w-max items-center gap-2 py-1",
+  list: "flex min-w-max items-center gap-2 py-1 max-sm:mb-2",
   dataIndicator: "mt-1 h-1.5 w-1.5 rounded-full bg-current"
 };
 

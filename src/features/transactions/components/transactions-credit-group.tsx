@@ -63,7 +63,7 @@ export function TransactionsCreditGroup({ title, totalLabel, children }: Transac
   return (
     <TransactionsAccountKindGroup
       description="Compras no crédito aparecem aqui, mas só afetam o saldo quando a fatura é paga."
-      summaryLabel="Total"
+      summaryLabel="Gasto total"
       summaryValue={totalLabel}
       title={title}
     >

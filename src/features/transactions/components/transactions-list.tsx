@@ -79,7 +79,7 @@ export function TransactionsList({
               ) : (
                 <TransactionsAccountKindGroup
                   key={accountKindGroup.key}
-                  summaryLabel="Resultado"
+                  summaryLabel="Saldo restante"
                   summaryValue={formatTransactionAmountFromCents(accountKindGroup.summaryAmount)}
                   title={accountKindGroup.title}
                 >
