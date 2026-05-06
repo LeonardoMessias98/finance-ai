@@ -3,11 +3,13 @@ import { isCreditAccount } from "@/features/accounts/utils/account-type-compatib
 import type { Transaction } from "@/features/transactions/types/transaction";
 
 export type TransactionAccountKindGroup = {
-  key: "debit" | "credit";
+  key: TransactionAccountKindGroupKey;
   title: string;
   transactions: Transaction[];
   summaryAmount: number;
 };
+
+export type TransactionAccountKindGroupKey = "debit" | "credit";
 
 export type DebitTransactionsMonthlySummary = {
   incomeAmount: number;
@@ -38,9 +40,13 @@ export function calculateDebitTransactionsResult(transactions: Transaction[]): n
 }
 
 export function calculateCreditTransactionsVisualTotal(transactions: Transaction[]): number {
-  return transactions
-    .filter((transaction) => transaction.type === "expense")
-    .reduce((sum, transaction) => sum + transaction.amount, 0);
+  return transactions.reduce((sum, transaction) => {
+    if (transaction.type !== "expense") {
+      return sum;
+    }
+
+    return sum + transaction.amount;
+  }, 0);
 }
 
 export function buildDebitTransactionsMonthlySummary(
@@ -48,12 +54,17 @@ export function buildDebitTransactionsMonthlySummary(
   accounts: Account[]
 ): DebitTransactionsMonthlySummary {
   const debitTransactions = filterDebitTransactions(transactions, accounts);
-  const incomeAmount = debitTransactions
-    .filter((transaction) => transaction.type === "income")
-    .reduce((sum, transaction) => sum + transaction.amount, 0);
-  const expenseAmount = debitTransactions
-    .filter((transaction) => transaction.type === "expense")
-    .reduce((sum, transaction) => sum + transaction.amount, 0);
+  let incomeAmount = 0;
+  let expenseAmount = 0;
+
+  for (const transaction of debitTransactions) {
+    if (transaction.type === "income") {
+      incomeAmount += transaction.amount;
+      continue;
+    }
+
+    expenseAmount += transaction.amount;
+  }
 
   return {
     incomeAmount,

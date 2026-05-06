@@ -253,6 +253,77 @@ describe("getFamilyFinancialSummary", () => {
     expect(summary?.monthlyExpense).not.toBe(3_200);
   });
 
+  it("counts invoice payments created as debit expenses in the main monthly expenses", async () => {
+    findFirstFamilyForMemberMock.mockResolvedValue({
+      ...buildFamily(),
+      members: [
+        {
+          userId: ownerUserId,
+          role: "owner",
+          canView: true
+        }
+      ]
+    });
+    listTransactionsMock.mockResolvedValue([
+      {
+        id: "income",
+        userId: ownerUserId,
+        description: "Salário",
+        amount: 5_000,
+        type: "income",
+        date: new Date("2026-05-03T12:00:00.000Z"),
+        competencyMonth: "2026-05",
+        categoryId: `${ownerUserId}-${categoryIncomeId}`,
+        accountId: `${ownerUserId}-${accountId}`,
+        status: "received",
+        isRecurring: false
+      },
+      {
+        id: "invoice-payment",
+        userId: ownerUserId,
+        description: "Pagamento de fatura",
+        amount: 1_200,
+        type: "expense",
+        date: new Date("2026-05-04T12:00:00.000Z"),
+        competencyMonth: "2026-05",
+        categoryId: `${ownerUserId}-${categoryExpenseId}`,
+        accountId: `${ownerUserId}-${accountId}`,
+        paymentForCreditAccountId: `${ownerUserId}-${creditAccountId}`,
+        status: "paid",
+        isRecurring: false
+      },
+      {
+        id: "credit-expense",
+        userId: ownerUserId,
+        description: "Compra no crédito",
+        amount: 9_999,
+        type: "expense",
+        date: new Date("2026-05-05T12:00:00.000Z"),
+        competencyMonth: "2026-05",
+        categoryId: `${ownerUserId}-${categoryExpenseId}`,
+        accountId: `${ownerUserId}-${creditAccountId}`,
+        status: "paid",
+        isRecurring: false
+      }
+    ]);
+
+    const summary = await getFamilyFinancialSummary({
+      competencyMonth: "2026-05"
+    });
+
+    expect(summary).toEqual(
+      expect.objectContaining({
+        totalCurrentBalance: 13_800,
+        monthlyDebitExpense: 1_200,
+        monthlyExpense: 1_200,
+        monthlyCreditExpense: 9_999,
+        monthlyResult: 3_800
+      })
+    );
+    expect(summary?.members[0]?.expenseCategoryBreakdown.debit.totalExpenses).toBe(1_200);
+    expect(summary?.members[0]?.expenseCategoryBreakdown.credit.totalExpenses).toBe(9_999);
+  });
+
   it("exposes debit and credit expenses per family member", async () => {
     findFirstFamilyForMemberMock.mockResolvedValue(buildFamily());
 

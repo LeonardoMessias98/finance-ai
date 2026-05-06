@@ -4,11 +4,11 @@ import { describe, expect, it, vi } from "vitest";
 
 import { TransactionsPage, countActiveTransactionFilters } from "@/features/transactions/components/transactions-page";
 import type { Account } from "@/features/accounts/types/account";
-import { listAccountsForManagement } from "@/features/accounts/services/list-accounts-for-management-service";
-import { listCategoriesForManagement } from "@/features/categories/services/list-categories-for-management-service";
-import { getTransactionForEditing } from "@/features/transactions/services/get-transaction-for-editing-service";
-import { listTransactionsForManagement } from "@/features/transactions/services/list-transactions-for-management-service";
+import type { Category } from "@/features/categories/types/category";
+import { getTransactionsPageData } from "@/features/transactions/services/get-transactions-page-data-service";
 import type { Transaction } from "@/features/transactions/types/transaction";
+import { buildDebitTransactionsMonthlySummary } from "@/features/transactions/utils/build-transaction-account-kind-groups";
+import { buildTransactionsListView } from "@/features/transactions/utils/build-transactions-list-view";
 
 vi.mock("server-only", () => ({}));
 
@@ -32,20 +32,8 @@ vi.mock("@/features/transactions/components/transactions-list", () => ({
   TransactionsList: () => <div>Lista de transações</div>
 }));
 
-vi.mock("@/features/accounts/services/list-accounts-for-management-service", () => ({
-  listAccountsForManagement: vi.fn()
-}));
-
-vi.mock("@/features/categories/services/list-categories-for-management-service", () => ({
-  listCategoriesForManagement: vi.fn()
-}));
-
-vi.mock("@/features/transactions/services/get-transaction-for-editing-service", () => ({
-  getTransactionForEditing: vi.fn()
-}));
-
-vi.mock("@/features/transactions/services/list-transactions-for-management-service", () => ({
-  listTransactionsForManagement: vi.fn()
+vi.mock("@/features/transactions/services/get-transactions-page-data-service", () => ({
+  getTransactionsPageData: vi.fn()
 }));
 
 const filters = {
@@ -67,13 +55,30 @@ const defaultAccounts: Account[] = [
 ];
 
 const defaultTransactions: Transaction[] = [];
+const defaultCategories: Category[] = [
+  {
+    id: "category-income",
+    userId: "user-1",
+    name: "Salário",
+    type: "income",
+    isActive: true
+  },
+  {
+    id: "category-1",
+    userId: "user-1",
+    name: "Mercado",
+    type: "expense",
+    isActive: true
+  }
+];
 
 function createTransaction(
   id: string,
   accountId: string,
   type: Transaction["type"],
   amount: number,
-  status: Transaction["status"]
+  status: Transaction["status"],
+  overrides: Partial<Transaction> = {}
 ): Transaction {
   return {
     id,
@@ -86,7 +91,8 @@ function createTransaction(
     categoryId: type === "income" ? "category-income" : "category-1",
     accountId,
     status,
-    isRecurring: false
+    isRecurring: false,
+    ...overrides
   };
 }
 
@@ -105,25 +111,22 @@ async function renderTransactionsPage(options?: {
   accounts?: Account[];
   transactions?: Transaction[];
 }) {
-  vi.mocked(listAccountsForManagement).mockResolvedValue(options?.accounts ?? defaultAccounts);
-  vi.mocked(listCategoriesForManagement).mockResolvedValue([
-    {
-      id: "category-income",
-      userId: "user-1",
-      name: "Salário",
-      type: "income",
-      isActive: true
-    },
-    {
-      id: "category-1",
-      userId: "user-1",
-      name: "Mercado",
-      type: "expense",
-      isActive: true
-    }
-  ]);
-  vi.mocked(listTransactionsForManagement).mockResolvedValue(options?.transactions ?? defaultTransactions);
-  vi.mocked(getTransactionForEditing).mockResolvedValue(null);
+  const accounts = options?.accounts ?? defaultAccounts;
+  const categories = defaultCategories;
+  const transactions = options?.transactions ?? defaultTransactions;
+
+  vi.mocked(getTransactionsPageData).mockResolvedValue({
+    accounts,
+    categories,
+    transactions,
+    editingTransaction: null,
+    monthlyDebitSummary: buildDebitTransactionsMonthlySummary(transactions, accounts),
+    accountKindGroups: buildTransactionsListView({
+      transactions,
+      accounts,
+      categories
+    })
+  });
 
   render(
     await TransactionsPage({
@@ -190,6 +193,30 @@ describe("TransactionsPage monthly summary", () => {
 
     expect(getSummaryValue("Saídas")).toHaveTextContent("R$ 1.000,00");
     expect(getSummaryValue("Resultado")).toHaveTextContent("-R$ 1.000,00");
+  });
+
+  it("counts credit card payment as debit monthly expense", async () => {
+    await renderTransactionsPage({
+      accounts: [
+        ...defaultAccounts,
+        {
+          id: "credit-account",
+          userId: "user-1",
+          name: "Cartão",
+          type: "credit",
+          initialBalance: 0,
+          isActive: true
+        }
+      ],
+      transactions: [
+        createTransaction("credit-payment", "account-1", "expense", 75_000, "paid", {
+          paymentForCreditAccountId: "credit-account"
+        })
+      ]
+    });
+
+    expect(getSummaryValue("Saídas")).toHaveTextContent("R$ 750,00");
+    expect(getSummaryValue("Resultado")).toHaveTextContent("-R$ 750,00");
   });
 
   it("ignores credit expenses in monthly expense and result", async () => {

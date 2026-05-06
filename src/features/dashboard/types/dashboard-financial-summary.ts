@@ -43,6 +43,8 @@ export type DashboardLatestTransaction = {
 
 export type DashboardFinancialSummary = {
   competencyMonth: string;
+  monthNavigationMonths: string[];
+  monthNavigationDataMonths: string[];
   totalCurrentBalance: number;
   monthlyIncome: number;
   monthlyExpense: number;

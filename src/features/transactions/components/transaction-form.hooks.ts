@@ -57,8 +57,14 @@ export function useTransactionFormController({
   const transactionDate = form.watch("date");
   const competencyMonth = form.watch("competencyMonth");
   const availableAccounts = useMemo(
-    () => getAvailableTransactionAccounts(accounts, transaction?.accountId, transactionType),
-    [accounts, transaction?.accountId, transactionType]
+    () =>
+      getAvailableTransactionAccounts(
+        accounts,
+        transaction?.accountId,
+        transactionType,
+        Boolean(selectedPaymentCreditAccountId)
+      ),
+    [accounts, selectedPaymentCreditAccountId, transaction?.accountId, transactionType]
   );
   const availableCategories = useMemo(
     () => getAvailableTransactionCategories(categories, transaction?.categoryId),
@@ -105,10 +111,10 @@ export function useTransactionFormController({
   }, [form, isSelectedAccountCredit, transactionType]);
 
   useEffect(() => {
-    if (transactionType !== "expense" && form.getValues("paymentForCreditAccountId")) {
+    if ((transactionType !== "expense" || isSelectedAccountCredit) && form.getValues("paymentForCreditAccountId")) {
       form.setValue("paymentForCreditAccountId", "", { shouldValidate: true });
     }
-  }, [form, transactionType]);
+  }, [form, isSelectedAccountCredit, transactionType]);
 
   useEffect(() => {
     const derivedCompetencyMonth = getCompetencyMonthFromDateInput(transactionDate);
@@ -202,6 +208,7 @@ export function useTransactionFormController({
     categoryOptions,
     paymentCreditAccounts,
     resetForm,
+    selectedPaymentCreditAccountId,
     setShowAdvancedFields,
     showAdvancedFields,
     statusOptions,

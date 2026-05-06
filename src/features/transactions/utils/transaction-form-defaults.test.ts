@@ -110,4 +110,10 @@ describe("transaction-form-defaults", () => {
       "checking"
     ]);
   });
+
+  it("keeps only debit accounts available for credit card payments", () => {
+    expect(getAvailableTransactionAccounts(accounts, undefined, "expense", true).map((account) => account.type)).toEqual([
+      "checking"
+    ]);
+  });
 });

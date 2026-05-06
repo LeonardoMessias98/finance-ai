@@ -1,12 +1,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  buildCategoryExpensePieGradient,
+  calculateCategoryExpenseTotal,
+  categoryExpensePieChartPercentFormatter,
+  getCategoryExpenseSliceColor
+} from "@/components/ui/category-expense-pie-chart.helpers";
+import type { CategoryExpensePieChartItem } from "@/components/ui/category-expense-pie-chart.types";
 import { EmptyState } from "@/components/ui/empty-state";
 import { formatAccountBalanceFromCents } from "@/features/accounts/utils/account-formatters";
-
-export type CategoryExpensePieChartItem = {
-  categoryName: string;
-  amount: number;
-  percentage: number;
-};
 
 type CategoryExpensePieChartProps = {
   title: string;
@@ -17,40 +18,13 @@ type CategoryExpensePieChartProps = {
 
 const defaultEmptyMessage = "Sem gastos por categoria neste mês.";
 
-const percentFormatter = new Intl.NumberFormat("pt-BR", {
-  style: "percent",
-  maximumFractionDigits: 0
-});
-
-const sliceColors = [
-  "hsl(var(--primary))",
-  "hsl(var(--income))",
-  "hsl(var(--warning))",
-  "hsl(var(--destructive))",
-  "hsl(var(--muted-foreground))"
-];
-
-function buildPieGradient(data: CategoryExpensePieChartItem[]): string {
-  let currentDegree = 0;
-  const slices = data.map((item, index) => {
-    const nextDegree = currentDegree + item.percentage * 360;
-    const slice = `${sliceColors[index % sliceColors.length]} ${currentDegree}deg ${nextDegree}deg`;
-
-    currentDegree = nextDegree;
-
-    return slice;
-  });
-
-  return `conic-gradient(${slices.join(", ")})`;
-}
-
 export function CategoryExpensePieChart({
   title,
   data,
   emptyMessage = defaultEmptyMessage,
   description
 }: CategoryExpensePieChartProps) {
-  const totalAmount = data.reduce((sum, item) => sum + item.amount, 0);
+  const totalAmount = calculateCategoryExpenseTotal(data);
 
   return (
     <Card aria-label={title} className="bg-background/55" role="region">
@@ -72,7 +46,7 @@ export function CategoryExpensePieChart({
               className="mx-auto size-36 rounded-full border border-border shadow-panel"
               role="img"
               style={{
-                background: buildPieGradient(data)
+                background: buildCategoryExpensePieGradient(data)
               }}
             />
             <div className="space-y-3">
@@ -86,7 +60,7 @@ export function CategoryExpensePieChart({
                       aria-hidden="true"
                       className="size-2.5 shrink-0 rounded-full"
                       style={{
-                        backgroundColor: sliceColors[index % sliceColors.length]
+                        backgroundColor: getCategoryExpenseSliceColor(index)
                       }}
                     />
                     <p className="truncate text-sm font-semibold text-foreground">{item.categoryName}</p>
@@ -95,7 +69,9 @@ export function CategoryExpensePieChart({
                     <p className="text-sm font-semibold text-foreground">
                       {formatAccountBalanceFromCents(item.amount)}
                     </p>
-                    <p className="text-xs text-muted-foreground">{percentFormatter.format(item.percentage)}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {categoryExpensePieChartPercentFormatter.format(item.percentage)}
+                    </p>
                   </div>
                 </div>
               ))}

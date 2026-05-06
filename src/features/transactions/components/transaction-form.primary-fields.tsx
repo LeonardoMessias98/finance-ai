@@ -1,7 +1,6 @@
 import { Controller, type UseFormReturn } from "react-hook-form";
 
 import { FieldErrorMessage } from "@/components/forms/field-error-message";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
@@ -11,57 +10,6 @@ import type { Category } from "@/features/categories/types/category";
 import type { TransactionType } from "@/features/transactions/types/transaction";
 import type { TransactionFormValues } from "@/features/transactions/schemas/transaction-schema";
 import { formatTransactionCurrencyInput, parseTransactionCurrencyInput } from "@/features/transactions/utils/transaction-currency";
-import { getDefaultTransactionStatus, getTransactionTypeLabel } from "@/features/transactions/utils/transaction-formatters";
-
-type TransactionTypeSelectorProps = {
-  form: UseFormReturn<TransactionFormValues>;
-  isPending: boolean;
-  isInstallmentSeries: boolean;
-  transactionType: TransactionType;
-  transactionTypeOptions: TransactionType[];
-};
-
-export function TransactionTypeSelector({
-  form,
-  isPending,
-  isInstallmentSeries,
-  transactionType,
-  transactionTypeOptions
-}: TransactionTypeSelectorProps) {
-  return (
-    <fieldset className="space-y-2">
-      <legend className="text-sm font-medium text-foreground">Tipo</legend>
-      <div className="grid grid-cols-3 gap-2">
-        {transactionTypeOptions.map((option) => (
-          <Button
-            aria-pressed={transactionType === option}
-            className="w-full"
-            disabled={isPending || isInstallmentSeries}
-            key={option}
-            onClick={() => {
-              form.setValue("type", option, {
-                shouldDirty: true,
-                shouldValidate: true
-              });
-              form.setValue("status", getDefaultTransactionStatus(option), {
-                shouldDirty: true,
-                shouldValidate: true
-              });
-            }}
-            type="button"
-            variant={transactionType === option ? "default" : "outline"}
-          >
-            {getTransactionTypeLabel(option)}
-          </Button>
-        ))}
-      </div>
-      <p className="text-xs leading-relaxed text-muted-foreground">
-        Contas de crédito não recebem entradas.
-      </p>
-      <FieldErrorMessage message={form.formState.errors.type?.message} />
-    </fieldset>
-  );
-}
 
 type TransactionPrimaryFieldsProps = {
   form: UseFormReturn<TransactionFormValues>;
@@ -69,6 +17,9 @@ type TransactionPrimaryFieldsProps = {
   isInstallmentSeries: boolean;
   availableAccounts: Account[];
   categoryOptions: Category[];
+  isSelectedAccountCredit: boolean;
+  paymentCreditAccounts: Account[];
+  transactionType: TransactionType;
 };
 
 export function TransactionPrimaryFields({
@@ -76,8 +27,14 @@ export function TransactionPrimaryFields({
   isPending,
   isInstallmentSeries,
   availableAccounts,
-  categoryOptions
+  categoryOptions,
+  isSelectedAccountCredit,
+  paymentCreditAccounts,
+  transactionType
 }: TransactionPrimaryFieldsProps) {
+  const shouldShowCreditPaymentField =
+    transactionType === "expense" && !isSelectedAccountCredit && paymentCreditAccounts.length > 0;
+
   return (
     <>
       <div className="grid gap-4 sm:grid-cols-[minmax(0,0.38fr)_minmax(0,0.62fr)]">
@@ -160,6 +117,29 @@ export function TransactionPrimaryFields({
           <FieldErrorMessage message={form.formState.errors.accountId?.message} />
         </div>
       </div>
+
+      {shouldShowCreditPaymentField ? (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div className="space-y-2 sm:col-start-3">
+            <Label htmlFor="paymentForCreditAccountId">Conta de crédito paga</Label>
+            <Select
+              aria-invalid={Boolean(form.formState.errors.paymentForCreditAccountId)}
+              disabled={isPending || isInstallmentSeries}
+              id="paymentForCreditAccountId"
+              {...form.register("paymentForCreditAccountId")}
+            >
+              <option value="">Não é pagamento</option>
+              {paymentCreditAccounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.name}
+                  {account.isActive ? "" : " · Inativa"}
+                </option>
+              ))}
+            </Select>
+            <FieldErrorMessage message={form.formState.errors.paymentForCreditAccountId?.message} />
+          </div>
+        </div>
+      ) : null}
     </>
   );
 }

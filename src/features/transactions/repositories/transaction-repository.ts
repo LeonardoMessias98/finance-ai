@@ -39,6 +39,18 @@ function mapTransactionDocument(document: HydratedDocument<TransactionDocument>)
   };
 }
 
+export type TransactionMonthReference = Pick<Transaction, "competencyMonth" | "creditPaymentMonth">;
+
+type ListTransactionsForDashboardInput = {
+  userId: string;
+  competencyMonths: string[];
+};
+
+type TransactionMonthReferenceAggregation = {
+  competencyMonths: string[];
+  creditPaymentMonths: Array<string | null | undefined>;
+};
+
 export async function createTransaction(input: CreateTransactionInput): Promise<Transaction> {
   const payload = createTransactionSchema.parse(input);
 
@@ -183,6 +195,85 @@ export async function listTransactions(filters: TransactionFilters): Promise<Tra
     .exec();
 
   return documents.map(mapTransactionDocument);
+}
+
+export async function listTransactionsForDashboard(input: ListTransactionsForDashboardInput): Promise<Transaction[]> {
+  if (input.competencyMonths.length === 0) {
+    return [];
+  }
+
+  await connectToDatabase();
+
+  const documents = await TransactionModel.find({
+    userId: input.userId,
+    competencyMonth: {
+      $in: input.competencyMonths
+    }
+  })
+    .select({
+      userId: 1,
+      description: 1,
+      amount: 1,
+      type: 1,
+      date: 1,
+      competencyMonth: 1,
+      creditPaymentMonth: 1,
+      categoryId: 1,
+      accountId: 1,
+      paymentForCreditAccountId: 1,
+      status: 1,
+      isRecurring: 1
+    })
+    .sort({
+      date: -1,
+      description: 1
+    })
+    .exec();
+
+  return documents.map(mapTransactionDocument);
+}
+
+export async function listTransactionMonthReferences(userId: string): Promise<TransactionMonthReference[]> {
+  if (!isObjectIdString(userId)) {
+    return [];
+  }
+
+  await connectToDatabase();
+
+  const [result] = await TransactionModel.aggregate<TransactionMonthReferenceAggregation>([
+    {
+      $match: {
+        userId: new Types.ObjectId(userId)
+      }
+    },
+    {
+      $group: {
+        _id: null,
+        competencyMonths: {
+          $addToSet: "$competencyMonth"
+        },
+        creditPaymentMonths: {
+          $addToSet: "$creditPaymentMonth"
+        }
+      }
+    }
+  ]).exec();
+
+  if (!result) {
+    return [];
+  }
+
+  const competencyMonthReferences = result.competencyMonths.map((competencyMonth) => ({
+    competencyMonth
+  }));
+  const creditPaymentMonthReferences = result.creditPaymentMonths
+    .filter((creditPaymentMonth): creditPaymentMonth is string => typeof creditPaymentMonth === "string")
+    .map((creditPaymentMonth) => ({
+      competencyMonth: creditPaymentMonth,
+      creditPaymentMonth
+    }));
+
+  return [...competencyMonthReferences, ...creditPaymentMonthReferences];
 }
 
 export async function deleteTransaction(transactionId: string, userId: string): Promise<Transaction | null> {

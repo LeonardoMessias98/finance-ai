@@ -6,6 +6,8 @@ import type { DashboardFinancialSummary } from "@/features/dashboard/types/dashb
 
 const summary: DashboardFinancialSummary = {
   competencyMonth: "2026-05",
+  monthNavigationMonths: ["2026-05"],
+  monthNavigationDataMonths: ["2026-05"],
   totalCurrentBalance: 10_000,
   monthlyIncome: 5_000,
   monthlyExpense: 2_000,

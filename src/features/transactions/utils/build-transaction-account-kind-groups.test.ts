@@ -15,7 +15,13 @@ function createAccount(id: string, type: AccountType): Account {
   };
 }
 
-function createTransaction(id: string, accountId: string, type: TransactionType, amount: number): Transaction {
+function createTransaction(
+  id: string,
+  accountId: string,
+  type: TransactionType,
+  amount: number,
+  overrides: Partial<Transaction> = {}
+): Transaction {
   return {
     id,
     userId: "user-1",
@@ -26,7 +32,8 @@ function createTransaction(id: string, accountId: string, type: TransactionType,
     competencyMonth: "2026-05",
     accountId,
     status: type === "income" ? "received" : "paid",
-    isRecurring: false
+    isRecurring: false,
+    ...overrides
   };
 }
 
@@ -72,6 +79,25 @@ describe("buildTransactionAccountKindGroups", () => {
 
     expect(groups.find((group) => group.key === "debit")?.summaryAmount).toBe(0);
     expect(groups.find((group) => group.key === "credit")?.summaryAmount).toBe(250_000);
+  });
+
+  it("lists credit card payments as debit expenses", () => {
+    const accounts = [createAccount("debit-account", "debit"), createAccount("credit-account", "credit")];
+    const transactions = [
+      createTransaction("credit-payment", "debit-account", "expense", 75_000, {
+        paymentForCreditAccountId: "credit-account"
+      })
+    ];
+    const groups = buildTransactionAccountKindGroups(transactions, accounts);
+
+    expect(groups.find((group) => group.key === "debit")?.transactions).toEqual([
+      expect.objectContaining({
+        id: "credit-payment",
+        paymentForCreditAccountId: "credit-account"
+      })
+    ]);
+    expect(groups.find((group) => group.key === "debit")?.summaryAmount).toBe(-75_000);
+    expect(groups.find((group) => group.key === "credit")?.transactions).toHaveLength(0);
   });
 
   it("lists credit expenses in the credit group for visual history", () => {

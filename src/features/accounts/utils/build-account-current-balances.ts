@@ -33,7 +33,7 @@ function calculateCreditCurrentBalance(account: Account, transactions: Transacti
     )
     .reduce((sum, transaction) => sum + transaction.amount, 0);
 
-  return (spentAmount - paidAmount) * -1;
+  return paidAmount - spentAmount;
 }
 
 export function buildAccountsWithCurrentBalances(

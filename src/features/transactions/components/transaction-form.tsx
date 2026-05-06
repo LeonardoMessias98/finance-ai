@@ -8,13 +8,9 @@ import {
 } from "@/features/transactions/components/transaction-form.actions";
 import { TransactionAdvancedFields } from "@/features/transactions/components/transaction-form.advanced-fields";
 import { useTransactionFormController } from "@/features/transactions/components/transaction-form.hooks";
-import {
-  transactionTypeOptions
-} from "@/features/transactions/components/transaction-form.helpers";
-import {
-  TransactionPrimaryFields,
-  TransactionTypeSelector
-} from "@/features/transactions/components/transaction-form.primary-fields";
+import { transactionTypeOptions } from "@/features/transactions/components/transaction-form.helpers";
+import { TransactionPrimaryFields } from "@/features/transactions/components/transaction-form.primary-fields";
+import { TransactionTypeSelector } from "@/features/transactions/components/transaction-form.type-selector";
 import type { TransactionFormProps } from "@/features/transactions/components/transaction-form.types";
 
 export function TransactionForm({
@@ -42,6 +38,7 @@ export function TransactionForm({
     isSubmitBlocked,
     paymentCreditAccounts,
     resetForm,
+    selectedPaymentCreditAccountId,
     setShowAdvancedFields,
     showAdvancedFields,
     statusOptions,
@@ -64,6 +61,8 @@ export function TransactionForm({
         form={form}
         isInstallmentSeries={isInstallmentSeries}
         isPending={isPending}
+        paymentCreditAccounts={paymentCreditAccounts}
+        selectedPaymentCreditAccountId={selectedPaymentCreditAccountId}
         transactionType={transactionType}
         transactionTypeOptions={transactionTypeOptions}
       />
@@ -73,13 +72,15 @@ export function TransactionForm({
         form={form}
         isInstallmentSeries={isInstallmentSeries}
         isPending={isPending}
+        isSelectedAccountCredit={isSelectedAccountCredit}
+        paymentCreditAccounts={paymentCreditAccounts}
+        transactionType={transactionType}
       />
       <TransactionAdvancedFields
         form={form}
         isEditing={isEditing}
         isInstallmentSeries={isInstallmentSeries}
         isPending={isPending}
-        paymentCreditAccounts={paymentCreditAccounts}
         setShowAdvancedFields={setShowAdvancedFields}
         showAdvancedFields={showAdvancedFields}
         statusOptions={statusOptions}

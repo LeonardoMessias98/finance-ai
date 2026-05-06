@@ -75,7 +75,6 @@ export function shouldOpenAdvancedTransactionFields(
     values.notes.trim().length > 0 ||
     values.isRecurring ||
     values.installmentCount > 1 ||
-    values.paymentForCreditAccountId.trim().length > 0 ||
     values.status !== getDefaultTransactionStatus(values.type) ||
     (Boolean(derivedCompetencyMonth) && values.competencyMonth !== derivedCompetencyMonth)
   );

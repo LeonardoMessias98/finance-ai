@@ -1,5 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { dashboardListCardsStyles } from "@/features/dashboard/components/dashboard-list-cards.styles";
 import type { DashboardCategoryTotal } from "@/features/dashboard/types/dashboard-financial-summary";
 import { formatAccountBalanceFromCents } from "@/features/accounts/utils/account-formatters";
 
@@ -17,27 +18,27 @@ export function DashboardCategoryBreakdown({
   items
 }: DashboardCategoryBreakdownProps) {
   return (
-    <Card className="border-primary/10 bg-card/85">
-      <CardHeader className="space-y-1">
-        <CardTitle className="font-display text-3xl">{title}</CardTitle>
+    <Card className={dashboardListCardsStyles.card}>
+      <CardHeader className={dashboardListCardsStyles.header}>
+        <CardTitle className={dashboardListCardsStyles.title}>{title}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
         {items.length === 0 ? (
-          <EmptyState className="bg-background/60" message={emptyMessage} />
+          <EmptyState className={dashboardListCardsStyles.emptyState} message={emptyMessage} />
         ) : (
-          <div className="space-y-3">
+          <div className={dashboardListCardsStyles.list}>
             {items.map((item) => (
               <div
-                className="grid gap-3 rounded-[1.5rem] border border-border/80 bg-background/70 p-4 sm:grid-cols-[1fr_auto]"
+                className={dashboardListCardsStyles.categoryItem}
                 key={item.categoryId ?? item.categoryName}
               >
                 <div>
-                  <p className="text-base font-semibold text-foreground">{item.categoryName}</p>
-                  <p className="text-sm text-muted-foreground">{item.transactionCount} transação(ões) aplicada(s)</p>
+                  <p className={dashboardListCardsStyles.categoryName}>{item.categoryName}</p>
+                  <p className={dashboardListCardsStyles.description}>{item.transactionCount} transação(ões) aplicada(s)</p>
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-semibold text-foreground">
+                <div className={dashboardListCardsStyles.valueContainer}>
+                  <p className={dashboardListCardsStyles.value}>
                     {formatAccountBalanceFromCents(item.totalAmount)}
                   </p>
                 </div>

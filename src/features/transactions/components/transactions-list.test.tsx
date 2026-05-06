@@ -6,6 +6,7 @@ import { TransactionsList } from "@/features/transactions/components/transaction
 import type { Account } from "@/features/accounts/types/account";
 import type { Category } from "@/features/categories/types/category";
 import type { Transaction } from "@/features/transactions/types/transaction";
+import { buildTransactionsListView } from "@/features/transactions/utils/build-transactions-list-view";
 
 vi.mock("@/features/transactions/components/transaction-delete-button", () => ({
   TransactionDeleteButton: ({ transactionId }: { transactionId: string }) => (
@@ -212,12 +213,15 @@ const transactions: Transaction[] = [
 function renderTransactionsList() {
   return render(
     <TransactionsList
-      accounts={accounts}
-      categories={categories}
+      accountKindGroups={buildTransactionsListView({
+        transactions,
+        accounts,
+        categories
+      })}
       filters={{
         competencyMonth: "2026-05"
       }}
-      transactions={transactions}
+      transactionCount={transactions.length}
     />
   );
 }

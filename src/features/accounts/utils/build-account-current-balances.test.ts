@@ -76,7 +76,7 @@ describe("buildAccountsWithCurrentBalances", () => {
     expect(buildAccountsWithCurrentBalances(accounts, transactions)[0]?.currentBalance).toBe(8_000);
   });
 
-  it("shows a negative current balance for credit accounts with expenses", () => {
+  it("shows credit debt as a negative balance when there is no payment", () => {
     const accounts = [createAccount("credit-account", "credit")];
     const transactions = [
       createTransaction({
@@ -91,8 +91,80 @@ describe("buildAccountsWithCurrentBalances", () => {
     expect(buildAccountsWithCurrentBalances(accounts, transactions)[0]?.currentBalance).toBe(-50_000);
   });
 
-  it("subtracts associated paid invoice payments from credit debt", () => {
+  it("shows the remaining credit debt after a partial payment", () => {
     const accounts = [createAccount("debit-account", "debit", 100_000), createAccount("credit-account", "credit")];
+    const transactions = [
+      createTransaction({
+        id: "credit-expense",
+        accountId: "credit-account",
+        amount: 50_000,
+        type: "expense",
+        status: "paid"
+      }),
+      createTransaction({
+        id: "credit-payment",
+        accountId: "debit-account",
+        amount: 20_000,
+        type: "expense",
+        status: "paid",
+        paymentForCreditAccountId: "credit-account"
+      })
+    ];
+
+    expect(buildAccountsWithCurrentBalances(accounts, transactions)[1]?.currentBalance).toBe(-30_000);
+  });
+
+  it("shows zero balance when credit debt is fully paid", () => {
+    const accounts = [createAccount("debit-account", "debit", 100_000), createAccount("credit-account", "credit")];
+    const transactions = [
+      createTransaction({
+        id: "credit-expense",
+        accountId: "credit-account",
+        amount: 50_000,
+        type: "expense",
+        status: "paid"
+      }),
+      createTransaction({
+        id: "credit-payment",
+        accountId: "debit-account",
+        amount: 50_000,
+        type: "expense",
+        status: "paid",
+        paymentForCreditAccountId: "credit-account"
+      })
+    ];
+
+    expect(buildAccountsWithCurrentBalances(accounts, transactions)[1]?.currentBalance).toBe(0);
+  });
+
+  it("keeps credit payment as a debit expense for available balance", () => {
+    const accounts = [createAccount("debit-account", "debit", 100_000), createAccount("credit-account", "credit")];
+    const transactions = [
+      createTransaction({
+        id: "credit-expense",
+        accountId: "credit-account",
+        amount: 50_000,
+        type: "expense",
+        status: "paid"
+      }),
+      createTransaction({
+        id: "credit-payment",
+        accountId: "debit-account",
+        amount: 20_000,
+        type: "expense",
+        status: "paid",
+        paymentForCreditAccountId: "credit-account"
+      })
+    ];
+
+    const balances = buildAccountsWithCurrentBalances(accounts, transactions);
+
+    expect(balances.find((account) => account.id === "debit-account")?.currentBalance).toBe(80_000);
+    expect(balances.find((account) => account.id === "credit-account")?.currentBalance).toBe(-30_000);
+  });
+
+  it("subtracts associated paid payments from legacy credit_card debt", () => {
+    const accounts = [createAccount("debit-account", "checking", 100_000), createAccount("credit-account", "credit_card")];
     const transactions = [
       createTransaction({
         id: "credit-expense",

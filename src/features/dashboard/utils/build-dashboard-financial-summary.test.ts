@@ -180,6 +180,39 @@ describe("buildDashboardFinancialSummary", () => {
     );
   });
 
+  it("keeps dashboard totals correct when month navigation uses compact transaction references", () => {
+    const summary = buildDashboardFinancialSummary({
+      accounts,
+      categories,
+      transactions,
+      monthNavigationTransactions: [
+        {
+          competencyMonth: "2025-12"
+        },
+        {
+          competencyMonth: "2026-06",
+          creditPaymentMonth: "2026-07"
+        }
+      ],
+      competencyMonth: "2026-04"
+    });
+
+    expect(summary.totalCurrentBalance).toBe(19_000);
+    expect(summary.monthlyIncome).toBe(5_000);
+    expect(summary.monthlyExpense).toBe(1_000);
+    expect(summary.monthlyResult).toBe(4_000);
+    expect(summary.monthNavigationMonths).toEqual([
+      "2025-12",
+      "2026-02",
+      "2026-03",
+      "2026-04",
+      "2026-05",
+      "2026-06",
+      "2026-07"
+    ]);
+    expect(summary.monthNavigationDataMonths).toEqual(["2025-12", "2026-06", "2026-07"]);
+  });
+
   it("includes debit accounts in the available balance", () => {
     const summary = buildDashboardFinancialSummary({
       accounts: [

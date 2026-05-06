@@ -106,12 +106,15 @@ const familySummary: FamilyFinancialSummary = {
   monthlyResult: 70_000
 };
 
-async function renderFamilyPage(summary: FamilyFinancialSummary | null = familySummary) {
+async function renderFamilyPage(
+  summary: FamilyFinancialSummary | null = familySummary,
+  competencyMonth = "2026-05"
+) {
   vi.mocked(getFamilyFinancialSummary).mockResolvedValue(summary);
 
   render(
     await FamilyPage({
-      competencyMonth: "2026-05"
+      competencyMonth
     })
   );
 }
@@ -133,11 +136,144 @@ function getStatValue(container: HTMLElement, label: string): HTMLElement {
 }
 
 describe("FamilyPage", () => {
+  it("renders the selected month", async () => {
+    await renderFamilyPage();
+
+    expect(screen.getByText("maio de 2026")).toBeInTheDocument();
+    expect(screen.getByLabelText("Mês exibido")).toHaveDisplayValue("2026-05");
+    expect(getFamilyFinancialSummary).toHaveBeenCalledWith({
+      competencyMonth: "2026-05"
+    });
+  });
+
+  it("links to the previous month", async () => {
+    await renderFamilyPage();
+
+    expect(screen.getByRole("link", { name: "Anterior" })).toHaveAttribute(
+      "href",
+      "/family?competencyMonth=2026-04"
+    );
+  });
+
+  it("links to the next month", async () => {
+    await renderFamilyPage();
+
+    expect(screen.getByRole("link", { name: "Próximo" })).toHaveAttribute(
+      "href",
+      "/family?competencyMonth=2026-06"
+    );
+  });
+
+  it("updates the family summary for the selected month", async () => {
+    await renderFamilyPage(
+      {
+        ...familySummary,
+        competencyMonth: "2026-06",
+        totalCurrentBalance: 90_000,
+        monthlyDebitIncome: 80_000,
+        monthlyDebitExpense: 45_000,
+        monthlyCreditExpense: 10_000,
+        monthlyResult: 35_000
+      },
+      "2026-06"
+    );
+
+    const familySummaryRegion = screen.getByRole("region", {
+      name: "Resumo consolidado da família"
+    });
+
+    expect(screen.getByText("junho de 2026")).toBeInTheDocument();
+    expect(getFamilyFinancialSummary).toHaveBeenCalledWith({
+      competencyMonth: "2026-06"
+    });
+    expect(getStatValue(familySummaryRegion, "Saldo familiar")).toHaveTextContent("R$ 900,00");
+    expect(getStatValue(familySummaryRegion, "Entradas débito")).toHaveTextContent("R$ 800,00");
+    expect(getStatValue(familySummaryRegion, "Gastos débito")).toHaveTextContent("R$ 450,00");
+    expect(getStatValue(familySummaryRegion, "Gastos crédito")).toHaveTextContent("R$ 100,00");
+    expect(getStatValue(familySummaryRegion, "Resultado débito")).toHaveTextContent("R$ 350,00");
+  });
+
+  it("updates category charts for the selected month", async () => {
+    await renderFamilyPage(
+      {
+        ...familySummary,
+        competencyMonth: "2026-06",
+        members: [
+          {
+            ...familySummary.members[0],
+            expenseCategoryBreakdown: {
+              memberId: "owner-user",
+              memberName: "Leonardo Messias",
+              debit: {
+                totalExpenses: 45_000,
+                expensesByCategory: [
+                  {
+                    categoryId: "category-transport",
+                    categoryName: "Transporte",
+                    amount: 45_000,
+                    percentage: 1
+                  }
+                ]
+              },
+              credit: {
+                totalExpenses: 10_000,
+                expensesByCategory: [
+                  {
+                    categoryId: "category-health",
+                    categoryName: "Saúde",
+                    amount: 10_000,
+                    percentage: 1
+                  }
+                ]
+              }
+            }
+          }
+        ]
+      },
+      "2026-06"
+    );
+
+    const categorySection = screen.getByRole("region", {
+      name: "Gastos por categoria de Leonardo Messias"
+    });
+
+    expect(within(categorySection).getByText("Transporte")).toBeInTheDocument();
+    expect(within(categorySection).getByText("Saúde")).toBeInTheDocument();
+    expect(within(categorySection).getByRole("region", { name: "Débito" })).toHaveTextContent("R$ 450,00");
+    expect(within(categorySection).getByRole("region", { name: "Crédito" })).toHaveTextContent("R$ 100,00");
+  });
+
+  it("renders a card for each member", async () => {
+    await renderFamilyPage({
+      ...familySummary,
+      members: [
+        familySummary.members[0],
+        {
+          ...familySummary.members[0],
+          userId: "member-user",
+          displayName: "Aissa de Oliveira",
+          role: "member",
+          expenseCategoryBreakdown: {
+            ...familySummary.members[0].expenseCategoryBreakdown,
+            memberId: "member-user",
+            memberName: "Aissa de Oliveira"
+          },
+          latestTransactions: []
+        }
+      ]
+    });
+
+    expect(getMemberCard("Leonardo Messias")).toBeInTheDocument();
+    expect(getMemberCard("Aissa de Oliveira")).toBeInTheDocument();
+  });
+
   it("shows debit and credit expenses separately for each member", async () => {
     await renderFamilyPage();
 
     const memberCard = getMemberCard("Leonardo Messias");
 
+    expect(within(memberCard).getByText("Débito")).toBeInTheDocument();
+    expect(within(memberCard).getByText("Crédito")).toBeInTheDocument();
     expect(within(memberCard).getByText("Gastos débito")).toBeInTheDocument();
     expect(within(memberCard).getByText("Gastos crédito")).toBeInTheDocument();
     expect(within(memberCard).getByText("Resultado débito")).toBeInTheDocument();
@@ -145,6 +281,11 @@ describe("FamilyPage", () => {
     expect(getStatValue(memberCard, "Gastos débito")).toHaveTextContent("R$ 300,00");
     expect(getStatValue(memberCard, "Gastos crédito")).toHaveTextContent("R$ 260,00");
     expect(getStatValue(memberCard, "Resultado débito")).toHaveTextContent("R$ 700,00");
+    expect(
+      within(memberCard).getByText(
+        "Crédito aparece apenas como visualização. O saldo muda quando a fatura é paga no débito."
+      )
+    ).toBeInTheDocument();
   });
 
   it("shows the consolidated family summary with debit and credit separated", async () => {
@@ -183,5 +324,38 @@ describe("FamilyPage", () => {
     expect(within(categorySection).getByText("Lazer")).toBeInTheDocument();
     expect(within(categorySection).getByRole("region", { name: "Débito" })).toHaveTextContent("R$ 300,00");
     expect(within(categorySection).getByRole("region", { name: "Crédito" })).toHaveTextContent("R$ 260,00");
+  });
+
+  it("handles empty recent transactions and category charts", async () => {
+    await renderFamilyPage({
+      ...familySummary,
+      members: [
+        {
+          ...familySummary.members[0],
+          latestTransactions: [],
+          expenseCategoryBreakdown: {
+            memberId: "owner-user",
+            memberName: "Leonardo Messias",
+            debit: {
+              totalExpenses: 0,
+              expensesByCategory: []
+            },
+            credit: {
+              totalExpenses: 0,
+              expensesByCategory: []
+            }
+          }
+        }
+      ]
+    });
+
+    const memberCard = getMemberCard("Leonardo Messias");
+    const categorySection = screen.getByRole("region", {
+      name: "Gastos por categoria de Leonardo Messias"
+    });
+
+    expect(within(memberCard).getByText("Sem transações no mês.")).toBeInTheDocument();
+    expect(within(categorySection).getByText("Sem gastos de débito por categoria neste mês.")).toBeInTheDocument();
+    expect(within(categorySection).getByText("Sem gastos de crédito por categoria neste mês.")).toBeInTheDocument();
   });
 });

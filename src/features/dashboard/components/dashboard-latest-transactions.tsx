@@ -3,7 +3,8 @@ import Link from "next/link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { isCreditAccount } from "@/features/accounts/utils/account-type-compatibility";
+import { groupDashboardLatestTransactionsByAccountKind } from "@/features/dashboard/components/dashboard-latest-transactions.helpers";
+import { dashboardLatestTransactionsStyles } from "@/features/dashboard/components/dashboard-latest-transactions.styles";
 import type { DashboardLatestTransaction } from "@/features/dashboard/types/dashboard-financial-summary";
 import { TransactionMetaBadge } from "@/features/transactions/components/transaction-meta-badge";
 import { TransactionTypeFilter } from "@/features/transactions/components/transaction-type-filter";
@@ -25,33 +26,6 @@ type DashboardLatestTransactionsProps = {
   selectedType?: TransactionType;
 };
 
-type LatestTransactionsGroup = {
-  key: "debit" | "credit";
-  title: string;
-  transactions: DashboardLatestTransaction[];
-};
-
-function groupLatestTransactionsByAccountKind(
-  latestTransactions: DashboardLatestTransaction[]
-): LatestTransactionsGroup[] {
-  const debitTransactions = latestTransactions.filter((transaction) => !isCreditAccount(transaction.accountType));
-  const creditTransactions = latestTransactions.filter((transaction) => isCreditAccount(transaction.accountType));
-  const groups: LatestTransactionsGroup[] = [
-    {
-      key: "debit",
-      title: "Débito",
-      transactions: debitTransactions
-    },
-    {
-      key: "credit",
-      title: "Crédito",
-      transactions: creditTransactions
-    }
-  ];
-
-  return groups.filter((group) => group.transactions.length > 0);
-}
-
 export function DashboardLatestTransactions({
   competencyMonth,
   latestTransactions,
@@ -64,13 +38,13 @@ export function DashboardLatestTransactions({
   const emptyStateMessage = selectedType
     ? `Nenhuma ${getTransactionTypeLabel(selectedType).toLowerCase()} neste mês.`
     : "Nenhuma transação neste mês.";
-  const latestTransactionGroups = groupLatestTransactionsByAccountKind(latestTransactions);
+  const latestTransactionGroups = groupDashboardLatestTransactionsByAccountKind(latestTransactions);
 
   return (
     <Card>
-      <CardHeader className="space-y-4">
-        <div className="flex flex-row items-center justify-between gap-3">
-          <CardTitle className="text-xl">Recentes</CardTitle>
+      <CardHeader className={dashboardLatestTransactionsStyles.header}>
+        <div className={dashboardLatestTransactionsStyles.headerRow}>
+          <CardTitle className={dashboardLatestTransactionsStyles.title}>Recentes</CardTitle>
           <Button asChild size="sm" variant="ghost">
             <Link href={transactionsHref}>Histórico</Link>
           </Button>
@@ -88,14 +62,14 @@ export function DashboardLatestTransactions({
       </CardHeader>
       <CardContent>
         {latestTransactions.length === 0 ? (
-          <EmptyState className="rounded-xl bg-secondary" message={emptyStateMessage} />
+          <EmptyState className={dashboardLatestTransactionsStyles.emptyState} message={emptyStateMessage} />
         ) : (
-          <div className="space-y-5">
+          <div className={dashboardLatestTransactionsStyles.groupList}>
             {latestTransactionGroups.map((group) => (
-              <section aria-label={`Recentes ${group.title}`} className="space-y-2" key={group.key}>
-                <h3 className="text-sm font-semibold text-muted-foreground">{group.title}</h3>
+              <section aria-label={`Recentes ${group.title}`} className={dashboardLatestTransactionsStyles.group} key={group.key}>
+                <h3 className={dashboardLatestTransactionsStyles.groupTitle}>{group.title}</h3>
 
-                <div className="space-y-2">
+                <div className={dashboardLatestTransactionsStyles.transactionList}>
                   {group.transactions.map((transaction) => {
                     const editHref = buildTransactionsHref({
                       competencyMonth,
@@ -105,28 +79,28 @@ export function DashboardLatestTransactions({
 
                     return (
                       <div
-                        className="grid gap-3 rounded-xl border border-border bg-secondary/80 p-4 lg:grid-cols-[1fr_auto]"
+                        className={dashboardLatestTransactionsStyles.transactionItem}
                         key={transaction.id}
                       >
-                        <div className="space-y-1">
-                          <div className="flex flex-wrap items-center gap-2">
+                        <div className={dashboardLatestTransactionsStyles.transactionMain}>
+                          <div className={dashboardLatestTransactionsStyles.descriptionRow}>
                             <span
-                              className={`inline-block h-2.5 w-2.5 shrink-0 rounded-full ${getTransactionTypeDotClassName(transaction.type)}`}
+                              className={`${dashboardLatestTransactionsStyles.typeDot} ${getTransactionTypeDotClassName(transaction.type)}`}
                             />
-                            <p className="text-sm font-medium text-foreground">{transaction.description}</p>
+                            <p className={dashboardLatestTransactionsStyles.description}>{transaction.description}</p>
                           </div>
-                          <p className="text-sm text-muted-foreground">
+                          <p className={dashboardLatestTransactionsStyles.metaText}>
                             {formatTransactionDate(transaction.date)} · {getTransactionStatusLabel(transaction.status)}
                           </p>
-                          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                          <div className={dashboardLatestTransactionsStyles.metaList}>
                             <TransactionMetaBadge>{transaction.accountName}</TransactionMetaBadge>
                             {transaction.categoryName ? (
                               <TransactionMetaBadge tone="category">{transaction.categoryName}</TransactionMetaBadge>
                             ) : null}
                           </div>
                         </div>
-                        <div className="flex items-center justify-between gap-3 lg:flex-col lg:items-end">
-                          <p className={`text-base font-semibold ${getTransactionTypeAmountClassName(transaction.type)}`}>
+                        <div className={dashboardLatestTransactionsStyles.transactionAside}>
+                          <p className={`${dashboardLatestTransactionsStyles.amount} ${getTransactionTypeAmountClassName(transaction.type)}`}>
                             {transaction.type === "income" ? "+" : "-"}
                             {formatTransactionAmountFromCents(transaction.amount)}
                           </p>

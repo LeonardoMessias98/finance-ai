@@ -23,10 +23,15 @@ export function getAutoDerivedCompetencyMonth(date: string, competencyMonth: str
 export function getAvailableTransactionAccounts(
   accounts: Account[],
   selectedAccountId?: string,
-  transactionType?: TransactionType
+  transactionType?: TransactionType,
+  isCreditPayment = false
 ): Account[] {
   return accounts.filter((account) => {
     const isSelectedAccount = account.id === selectedAccountId;
+
+    if (isCreditPayment && isCreditAccount(account.type)) {
+      return false;
+    }
 
     if (transactionType === "income" && isCreditAccount(account.type) && !isSelectedAccount) {
       return false;

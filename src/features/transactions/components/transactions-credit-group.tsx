@@ -3,6 +3,7 @@
 import { useId, useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 
+import { transactionsAccountKindGroupStyles } from "@/features/transactions/components/transactions-list.styles";
 import { cn } from "@/lib/utils";
 
 type TransactionsCreditGroupProps = {
@@ -30,27 +31,27 @@ export function TransactionsAccountKindGroup({
   const contentId = useId();
 
   return (
-    <section aria-label={`Grupo ${title}`} className="space-y-4">
+    <section aria-label={`Grupo ${title}`} className={transactionsAccountKindGroupStyles.section}>
       <button
         aria-controls={contentId}
         aria-expanded={isExpanded}
-        className="flex w-full flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-secondary/50 px-4 py-3 text-left transition-colors hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+        className={transactionsAccountKindGroupStyles.toggle}
         onClick={() => setIsExpanded((currentValue) => !currentValue)}
         type="button"
       >
-        <span className="text-base font-semibold text-foreground">{title}</span>
-        <span className="inline-flex items-center gap-2 text-sm font-medium text-muted-foreground">
-          {summaryLabel}: <span className="text-foreground">{summaryValue}</span>
+        <span className={transactionsAccountKindGroupStyles.title}>{title}</span>
+        <span className={transactionsAccountKindGroupStyles.summary}>
+          {summaryLabel}: <span className={transactionsAccountKindGroupStyles.summaryValue}>{summaryValue}</span>
           <ChevronDown
             aria-hidden="true"
-            className={cn("h-4 w-4 transition-transform", isExpanded ? "rotate-180" : "")}
+            className={cn(transactionsAccountKindGroupStyles.icon, isExpanded ? "rotate-180" : "")}
           />
         </span>
       </button>
-      {description ? <p className="px-1 text-xs leading-relaxed text-muted-foreground">{description}</p> : null}
+      {description ? <p className={transactionsAccountKindGroupStyles.description}>{description}</p> : null}
 
       {isExpanded ? (
-        <div className="space-y-5" id={contentId}>
+        <div className={transactionsAccountKindGroupStyles.content} id={contentId}>
           {children}
         </div>
       ) : null}

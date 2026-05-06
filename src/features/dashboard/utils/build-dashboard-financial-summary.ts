@@ -7,6 +7,10 @@ import type {
   DashboardCreditAccountSummary
 } from "@/features/dashboard/types/dashboard-financial-summary";
 import { buildDashboardAnalytics, createEmptyDashboardAnalytics } from "@/features/dashboard/utils/build-dashboard-analytics";
+import {
+  buildDashboardMonthNavigationDataMonths,
+  buildDashboardMonthNavigationMonths
+} from "@/features/dashboard/utils/dashboard-month-navigation";
 import type { Transaction, TransactionType } from "@/features/transactions/types/transaction";
 import {
   buildDebitTransactionsMonthlySummary,
@@ -15,6 +19,8 @@ import {
 
 const latestTransactionsLimit = 6;
 const latestTransactionsPerAccountKindLimit = 3;
+
+type DashboardMonthNavigationTransaction = Pick<Transaction, "competencyMonth" | "creditPaymentMonth">;
 
 export function isAppliedTransaction(transaction: Transaction): boolean {
   if (transaction.type === "income") {
@@ -85,23 +91,44 @@ function calculateAccountBalances(accounts: Account[], transactions: Transaction
 
 function calculateCreditAccountSummaries(accounts: Account[], transactions: Transaction[]): DashboardCreditAccountSummary[] {
   const creditAccounts = accounts.filter((account) => isCreditAccount(account.type));
+  const creditAccountIds = new Set(creditAccounts.map((account) => account.id));
+  const summaryByAccountId = new Map(
+    creditAccounts.map((account) => [
+      account.id,
+      {
+        spentAmount: 0,
+        paidAmount: 0
+      }
+    ])
+  );
+
+  for (const transaction of transactions) {
+    if (transaction.type !== "expense" || !isAppliedTransaction(transaction)) {
+      continue;
+    }
+
+    if (creditAccountIds.has(transaction.accountId)) {
+      const summary = summaryByAccountId.get(transaction.accountId);
+
+      if (summary) {
+        summary.spentAmount += transaction.amount;
+      }
+    }
+
+    if (transaction.paymentForCreditAccountId && creditAccountIds.has(transaction.paymentForCreditAccountId)) {
+      const summary = summaryByAccountId.get(transaction.paymentForCreditAccountId);
+
+      if (summary) {
+        summary.paidAmount += transaction.amount;
+      }
+    }
+  }
 
   return creditAccounts
     .map((account) => {
-      const spentAmount = transactions
-        .filter(
-          (transaction) =>
-            transaction.accountId === account.id && transaction.type === "expense" && isAppliedTransaction(transaction)
-        )
-        .reduce((sum, transaction) => sum + transaction.amount, 0);
-      const paidAmount = transactions
-        .filter(
-          (transaction) =>
-            transaction.paymentForCreditAccountId === account.id &&
-            transaction.type === "expense" &&
-            isAppliedTransaction(transaction)
-        )
-        .reduce((sum, transaction) => sum + transaction.amount, 0);
+      const summary = summaryByAccountId.get(account.id);
+      const spentAmount = summary?.spentAmount ?? 0;
+      const paidAmount = summary?.paidAmount ?? 0;
 
       return {
         accountId: account.id,
@@ -177,6 +204,11 @@ function aggregateCategoryTotals(transactions: Transaction[], categories: Catego
 export function createEmptyDashboardFinancialSummary(competencyMonth: string): DashboardFinancialSummary {
   return {
     competencyMonth,
+    monthNavigationMonths: buildDashboardMonthNavigationMonths({
+      competencyMonth,
+      transactions: []
+    }),
+    monthNavigationDataMonths: [],
     totalCurrentBalance: 0,
     monthlyIncome: 0,
     monthlyExpense: 0,
@@ -194,9 +226,11 @@ export function buildDashboardFinancialSummary(input: {
   accounts: Account[];
   categories: Category[];
   transactions: Transaction[];
+  monthNavigationTransactions?: DashboardMonthNavigationTransaction[];
   competencyMonth: string;
   latestTransactionsType?: TransactionType;
 }): DashboardFinancialSummary {
+  const monthNavigationTransactions = input.monthNavigationTransactions ?? input.transactions;
   const monthlyTransactions = sortTransactionsByDate(
     input.transactions.filter((transaction) => transaction.competencyMonth === input.competencyMonth)
   );
@@ -221,6 +255,11 @@ export function buildDashboardFinancialSummary(input: {
 
   return {
     competencyMonth: input.competencyMonth,
+    monthNavigationMonths: buildDashboardMonthNavigationMonths({
+      competencyMonth: input.competencyMonth,
+      transactions: monthNavigationTransactions
+    }),
+    monthNavigationDataMonths: buildDashboardMonthNavigationDataMonths(monthNavigationTransactions),
     totalCurrentBalance: accountBalances.reduce((sum, account) => sum + account.currentBalance, 0),
     monthlyIncome: monthlyDebitSummary.incomeAmount,
     monthlyExpense: monthlyDebitSummary.expenseAmount,

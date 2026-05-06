@@ -3,6 +3,7 @@ import { Landmark } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/empty-state";
+import { dashboardListCardsStyles } from "@/features/dashboard/components/dashboard-list-cards.styles";
 import type { DashboardAccountBalance } from "@/features/dashboard/types/dashboard-financial-summary";
 import { formatAccountBalanceFromCents, getAccountTypeLabel } from "@/features/accounts/utils/account-formatters";
 
@@ -12,9 +13,9 @@ type DashboardAccountBalancesProps = {
 
 export function DashboardAccountBalances({ accountBalances }: DashboardAccountBalancesProps) {
   return (
-    <Card className="border-primary/10 bg-card/85">
-      <CardHeader className="space-y-1">
-        <CardTitle className="font-display text-3xl">Saldo por conta na competência</CardTitle>
+    <Card className={dashboardListCardsStyles.card}>
+      <CardHeader className={dashboardListCardsStyles.header}>
+        <CardTitle className={dashboardListCardsStyles.title}>Saldo por conta na competência</CardTitle>
         <CardDescription>
           O cálculo considera saldo inicial e apenas transações aplicadas dentro do mês selecionado.
         </CardDescription>
@@ -22,36 +23,36 @@ export function DashboardAccountBalances({ accountBalances }: DashboardAccountBa
       <CardContent>
         {accountBalances.length === 0 ? (
           <EmptyState
-            className="bg-background/60"
+            className={dashboardListCardsStyles.emptyState}
             message="Cadastre contas e transações para ver o saldo consolidado na competência selecionada."
           />
         ) : (
-          <div className="space-y-3">
+          <div className={dashboardListCardsStyles.list}>
             {accountBalances.map((account) => (
               <div
-                className="grid gap-4 rounded-[1.5rem] border border-border/80 bg-background/70 p-4 lg:grid-cols-[1fr_auto]"
+                className={dashboardListCardsStyles.accountItem}
                 key={account.accountId}
               >
-                <div className="flex items-start gap-4">
+                <div className={dashboardListCardsStyles.accountMain}>
                   <div
-                    className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-white"
+                    className={dashboardListCardsStyles.accountIcon}
                     style={{
                       backgroundColor: account.color ?? "hsl(156 54% 27%)"
                     }}
                   >
-                    <Landmark className="h-5 w-5" />
+                    <Landmark className={dashboardListCardsStyles.accountIconSvg} />
                   </div>
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-lg font-semibold text-foreground">{account.accountName}</p>
+                  <div className={dashboardListCardsStyles.accountContent}>
+                    <div className={dashboardListCardsStyles.accountTitleRow}>
+                      <p className={dashboardListCardsStyles.accountName}>{account.accountName}</p>
                       <Badge variant="outline">{getAccountTypeLabel(account.accountType)}</Badge>
                       {!account.isActive ? <Badge variant="secondary">Inativa</Badge> : null}
                     </div>
-                    <p className="text-sm text-muted-foreground">Saldo consolidado na competência selecionada.</p>
+                    <p className={dashboardListCardsStyles.description}>Saldo consolidado na competência selecionada.</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-lg font-semibold text-foreground">
+                <div className={dashboardListCardsStyles.valueContainer}>
+                  <p className={dashboardListCardsStyles.value}>
                     {formatAccountBalanceFromCents(account.currentBalance)}
                   </p>
                 </div>

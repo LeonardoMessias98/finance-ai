@@ -79,8 +79,14 @@ function buildMemberCategoryExpenses(input: {
 function buildCategoryExpenseGroup(
   totalsByCategory: Map<string, Omit<FamilyMemberCategoryExpense, "percentage">>
 ): FamilyMemberCategoryExpenseGroup {
-  const totalExpenses = [...totalsByCategory.values()].reduce((sum, category) => sum + category.amount, 0);
-  const expensesByCategory = [...totalsByCategory.values()]
+  let totalExpenses = 0;
+  const categories = [...totalsByCategory.values()];
+
+  for (const category of categories) {
+    totalExpenses += category.amount;
+  }
+
+  const expensesByCategory = categories
     .map((category) => ({
       ...category,
       percentage: totalExpenses > 0 ? category.amount / totalExpenses : 0
@@ -108,9 +114,38 @@ function extractDebitExpenseAmount(breakdown: FamilyMemberCategoryExpenseBreakdo
 }
 
 function extractDebitIncomeAmount(transactions: Transaction[]): number {
-  return transactions
-    .filter((transaction) => transaction.type === "income")
-    .reduce((sum, transaction) => sum + transaction.amount, 0);
+  let incomeAmount = 0;
+
+  for (const transaction of transactions) {
+    if (transaction.type === "income") {
+      incomeAmount += transaction.amount;
+    }
+  }
+
+  return incomeAmount;
+}
+
+function buildFamilyTotals(members: FamilyMemberFinancialSummary[]) {
+  return members.reduce(
+    (totals, member) => ({
+      totalCurrentBalance: totals.totalCurrentBalance + member.totalCurrentBalance,
+      monthlyIncome: totals.monthlyIncome + member.monthlyIncome,
+      monthlyDebitIncome: totals.monthlyDebitIncome + member.monthlyDebitIncome,
+      monthlyExpense: totals.monthlyExpense + member.monthlyExpense,
+      monthlyDebitExpense: totals.monthlyDebitExpense + member.monthlyDebitExpense,
+      monthlyCreditExpense: totals.monthlyCreditExpense + member.monthlyCreditExpense,
+      monthlyResult: totals.monthlyResult + member.monthlyResult
+    }),
+    {
+      totalCurrentBalance: 0,
+      monthlyIncome: 0,
+      monthlyDebitIncome: 0,
+      monthlyExpense: 0,
+      monthlyDebitExpense: 0,
+      monthlyCreditExpense: 0,
+      monthlyResult: 0
+    }
+  );
 }
 
 function buildMemberSummaryResult(input: {
@@ -216,17 +251,12 @@ export async function getFamilyFinancialSummary(
       })
     )
   );
+  const totals = buildFamilyTotals(members);
 
   return {
     family,
     competencyMonth: input.competencyMonth,
     members,
-    totalCurrentBalance: members.reduce((sum, member) => sum + member.totalCurrentBalance, 0),
-    monthlyIncome: members.reduce((sum, member) => sum + member.monthlyIncome, 0),
-    monthlyDebitIncome: members.reduce((sum, member) => sum + member.monthlyDebitIncome, 0),
-    monthlyExpense: members.reduce((sum, member) => sum + member.monthlyExpense, 0),
-    monthlyDebitExpense: members.reduce((sum, member) => sum + member.monthlyDebitExpense, 0),
-    monthlyCreditExpense: members.reduce((sum, member) => sum + member.monthlyCreditExpense, 0),
-    monthlyResult: members.reduce((sum, member) => sum + member.monthlyResult, 0)
+    ...totals
   };
 }
